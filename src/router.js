@@ -243,29 +243,10 @@ class Router {
   }
 
   #handle(routes, request, response) {
-    let requestHost = null;
-    let requestMethod = null;
-    let requestUrl = null;
-
-    if (request.hasOwnProperty("headers")) {
-      requestHost = request.headers?.host;
-    } else {
-      requestHost = null;
-    }
-
-    if (request.hasOwnProperty("method")) {
-      requestMethod = request.method;
-    } else {
-      requestMethod = null;
-    }
-
-    if (request.hasOwnProperty("url")) {
-      requestUrl = request.url;
-    } else {
-      requestUrl = null;
-    }
-
-    let parsedUrl = url.parse(requestUrl);
+    const requestHost = request?.headers?.host;
+    const requestMethod = request?.method;
+    const requestUrl = request?.url;
+    const parsedUrl = url.parse(requestUrl);
     const requestPath = parsedUrl.pathname;
     const callStack = [];
     let callIndex = 0;
@@ -361,9 +342,9 @@ class Router {
 
     // 404 page not found
     if (
-      response.hasOwnProperty("headersSent") &&
-      response.hasOwnProperty("statusCode") &&
-      response.hasOwnProperty("end")
+      "headersSent" in response &&
+      "statusCode" in response &&
+      "end" in response
     ) {
       if (!response.headersSent) {
         response.statusCode = 404;
