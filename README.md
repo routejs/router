@@ -27,7 +27,7 @@ yarn add @routejs/router
 ## Simple example
 
 ```javascript
-const Router = require("@routejs/router");
+const { Router } = require("@routejs/router");
 const http = require("http");
 
 const app = new Router();
@@ -43,7 +43,7 @@ server.listen(3000);
 ### Url routes example
 Routejs is very simple and flexible, it support both object and array based url routing.
 
-Let's create urls file for routes:
+Let's create `urls.js` urls file for routes:
 ```javascript
 const { get, post, put, delete } = require("@routejs/router");
 const { getBlog, createBlog, updateBlog, deleteBlog } = require("./blogs");
@@ -56,10 +56,10 @@ const urls = [
 ];
 ```
 
-Use urls in routejs:
+Use urls in routejs app:
 ```javascript
 const http = require("http");
-const Router = require("@routejs/router");
+const { Router } = require("@routejs/router");
 const urls = require("./urls");
 
 const app = new Router();
