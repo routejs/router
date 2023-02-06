@@ -1,7 +1,7 @@
 ## Routejs
 
 <p align="center">
-  <img src="https://github.com/routejs/docs/blob/main/routejs.jpg" width="400px" alt="routejs logo">
+  <img src="https://raw.githubusercontent.com/routejs/docs/main/routejs.jpg" width="400px" alt="routejs logo">
 </p>
 
 Routejs is a fast and lightweight http router for nodejs.
