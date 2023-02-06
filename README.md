@@ -4,7 +4,8 @@
   <img src="https://github.com/routejs/docs/blob/main/routejs.jpg" width="400px" alt="routejs logo">
 </p>
 
-Routejs is a fast, simple and lightweight http routing library for nodejs. Routejs provide simple and elegant apis for http routing.
+Routejs is a fast and lightweight http router for nodejs.
+Routejs provide simple and elegant apis for http routing.
 
 ## Features
 - Fast and flexible routing
