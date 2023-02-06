@@ -1,0 +1,30 @@
+{
+  "name": "@routejs/router",
+  "version": "1.0.0",
+  "description": "Fast http router for nodejs",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "npx jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/routejs/router.git"
+  },
+  "keywords": [
+    "router",
+    "routejs",
+    "http",
+    "router",
+    "framework",
+    "nodejs"
+  ],
+  "author": "Rajkumar Dusad",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/routejs/router/issues"
+  },
+  "homepage": "https://github.com/routejs/router#readme"
+}
