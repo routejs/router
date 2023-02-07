@@ -1,5 +1,5 @@
 const path = require("node:path");
-const url = require("url");
+const url = require("node:url");
 const Route = require("./route");
 const supportedMethod = require("./supported-method");
 
