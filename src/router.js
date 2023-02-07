@@ -7,12 +7,14 @@ class Router {
   #routes = [];
   #config = {
     caseSensitive: false,
+    host: undefined,
   };
 
   constructor(options = {}) {
     if (options?.caseSensitive === true) {
       this.#config.caseSensitive = true;
     }
+    this.#config.host = options?.host;
   }
 
   checkout(path, ...callbacks) {
@@ -197,8 +199,9 @@ class Router {
     return path;
   }
 
-  #setRoute({ method, path, callbacks, group, name }) {
+  #setRoute({ host, method, path, callbacks, group, name }) {
     const route = new Route({
+      host: host ?? this.#config.host,
       method,
       path,
       callbacks,
