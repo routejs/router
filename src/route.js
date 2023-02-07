@@ -51,7 +51,7 @@ class Route {
       );
     }
 
-    if (Array.isArray(callbacks) === false) {
+    if (Array.isArray(callbacks) === false && typeof callbacks !== "function") {
       throw new TypeError(
         "Error: route callback accepts only function as an argument"
       );
@@ -69,16 +69,18 @@ class Route {
       ? this.#compileMiddlewareRegExp(group)
       : this.#compileMiddlewareRegExp("/");
     this.group = group;
-    this.callbacks = callbacks?.map((callback) => {
-      if (typeof callback !== "function") {
-        throw new TypeError(
-          `Error: ${
-            !!path ? "route" : "middleware"
-          } callback accepts only function as an argument`
-        );
-      }
-      return callback;
-    });
+    this.callbacks = Array.isArray(callbacks)
+      ? callbacks?.map((callback) => {
+          if (typeof callback !== "function") {
+            throw new TypeError(
+              `Error: ${
+                !!path ? "route" : "middleware"
+              } callback accepts only function as an argument`
+            );
+          }
+          return callback;
+        })
+      : [callbacks];
   }
 
   setName(name) {
@@ -129,8 +131,14 @@ class Route {
       return false;
     }
 
-    if (!!this.method && method.toUpperCase() !== this.method) {
-      return false;
+    if (!!this.method && Array.isArray(this.method)) {
+      if (!this.method.includes(method.toUpperCase())) {
+        return false;
+      }
+    } else {
+      if (!!this.method && method.toUpperCase() !== this.method) {
+        return false;
+      }
     }
 
     const match = this.regexp?.exec(path);

@@ -126,9 +126,19 @@ class Router {
           "Error: use function accepts only function or router as an argument"
         );
       }
-      this.group(callbacks[0], callbacks[1]);
+      if (callbacks.length == 2) {
+        return this.#mergeRoute({
+          group: callbacks[0],
+          callbacks: callbacks[1],
+        });
+      } else {
+        return this.#setRoute({
+          path: callbacks[0],
+          callbacks: callbacks.slice(1),
+        });
+      }
     } else {
-      this.#setRoute({ callbacks: callbacks });
+      return this.#setRoute({ callbacks: callbacks });
     }
   }
 
@@ -321,7 +331,7 @@ class Router {
         if (callIndex < callStack.length) {
           runMiddleware(callbacks, callbackIndex, exception);
         } else {
-          throw new Error(error);
+          throw exception;
         }
       }
     }
@@ -329,7 +339,11 @@ class Router {
     function runCallStack(callStack, callIndex, error = null) {
       if (callIndex >= callStack.length) {
         if (error !== null) {
-          throw new Error(error);
+          if (error instanceof Error) {
+            throw error;
+          } else {
+            throw new Error(error);
+          }
         }
         // Nothing to execute
         return;

@@ -8,6 +8,7 @@ Routejs is a fast and lightweight http router for nodejs.
 Routejs provide simple and elegant apis for http routing.
 
 ## Features
+
 - Fast and flexible routing
 - Simple and lightweight
 - Named routing
@@ -47,22 +48,25 @@ server.listen(3000);
 ```
 
 ## Url route example
+
 Routejs is very simple and flexible, it support both object and array based url routing.
 
 Let's create `urls.js` urls file for routes:
+
 ```javascript
-const { get, post, put, delete } = require("@routejs/router");
+const { route } = require("@routejs/router");
 const { getBlog, createBlog, updateBlog, deleteBlog } = require("./blogs");
 
 const urls = [
-  get("/blog", getBlog),
-  post("/blog", createBlog),
-  put("/blog", updateBlog),
-  delete("/blog", deleteBlog),
+  route("get", "/blog", getBlog),
+  route("post", "/blog", createBlog),
+  route("put", "/blog", updateBlog),
+  route("delete", "/blog", deleteBlog),
 ];
 ```
 
 Use urls in routejs app:
+
 ```javascript
 const http = require("http");
 const { Router } = require("@routejs/router");
@@ -78,9 +82,9 @@ server.listen(3000);
 
 ## Documentation
 
-  - Learn more from [Documentation](https://github.com/routejs/docs/) file.
-  - Documentation : [https://routejs.github.io/docs](https://routejs.github.io/docs)
+- Learn more from [Documentation](https://github.com/routejs/docs/) file.
+- Documentation : [https://routejs.github.io/docs](https://routejs.github.io/docs)
 
 ## License
 
-  [MIT License](https://github.com/routejs/router/blob/main/LICENSE)
+[MIT License](https://github.com/routejs/router/blob/main/LICENSE)
