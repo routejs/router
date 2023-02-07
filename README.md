@@ -9,17 +9,22 @@ Routejs provide simple and elegant apis for http routing.
 
 ## Features
 - Fast and flexible routing
-- Simple and minimal api
+- Simple and lightweight
 - Named routing
-- Grouped route
-- Host routing
+- Group routing
+- Subdomain based routing
+- Middleware support
+- Object and array based routing
 
 ## Installation
+
+Install using npm:
+
 ```shell
 npm i @routejs/router
 ```
 
-OR
+Install using yarn:
 
 ```shell
 yarn add @routejs/router
@@ -41,7 +46,7 @@ const server = http.createServer(app.handler());
 server.listen(3000);
 ```
 
-### Url routes example
+## Url route example
 Routejs is very simple and flexible, it support both object and array based url routing.
 
 Let's create `urls.js` urls file for routes:
@@ -75,7 +80,6 @@ server.listen(3000);
 
   - Learn more from [Documentation](https://github.com/routejs/docs/) file.
   - Documentation : [https://routejs.github.io/docs](https://routejs.github.io/docs)
-
 
 ## License
 

@@ -1,7 +1,7 @@
 {
   "name": "@routejs/router",
   "version": "1.0.0",
-  "description": "Fast http router for nodejs",
+  "description": "Routejs is a fast and lightweight http router for nodejs",
   "main": "index.js",
   "directories": {
     "test": "tests"
