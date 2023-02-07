@@ -65,8 +65,8 @@ const methods = {
   },
 };
 
-function setRoute({ method, path, callbacks, group, name }) {
-  return new Route({ method, path, callbacks, group, name });
+function setRoute({ host, method, path, callbacks, group, name }) {
+  return new Route({ host, method, path, callbacks, group, name });
 }
 
 function mergeRoute({ host, method, group, callbacks }) {
