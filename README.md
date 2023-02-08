@@ -63,6 +63,8 @@ const urls = [
   route("put", "/blog", updateBlog),
   route("delete", "/blog", deleteBlog),
 ];
+
+module.exports = urls;
 ```
 
 Use urls in routejs app:
