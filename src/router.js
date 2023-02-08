@@ -11,10 +11,10 @@ class Router {
   };
 
   constructor(options = {}) {
-    if (options?.caseSensitive === true) {
+    if (options.caseSensitive === true) {
       this.#config.caseSensitive = true;
     }
-    this.#config.host = options?.host;
+    this.#config.host = options.host;
   }
 
   checkout(path, ...callbacks) {
