@@ -70,7 +70,7 @@ class Route {
       : this.#compileMiddlewareRegExp("/");
     this.group = group;
     this.callbacks = Array.isArray(callbacks)
-      ? callbacks?.map((callback) => {
+      ? callbacks.map((callback) => {
           if (typeof callback !== "function") {
             throw new TypeError(
               `Error: ${
@@ -141,15 +141,15 @@ class Route {
       }
     }
 
-    const match = this.regexp?.exec(path);
+    const match = this.regexp.exec(path);
     if (match === null) {
       return false;
     }
 
     if (match.length > 1) {
       let index = 0;
-      for (let i = 1; i < match?.length ?? 0; i++) {
-        if (this.params?.hasOwnProperty(index)) {
+      for (let i = 1; i < match.length ?? 0; i++) {
+        if (this.params && this.params.hasOwnProperty(index)) {
           route.params[this.params[index]] = match[i];
         }
         index++;
@@ -161,8 +161,11 @@ class Route {
   #compileRouteRegExp(path) {
     try {
       let regexp = path
-        ?.replace(/\/?$/, "\\/?")
-        ?.replace(/\/:([^\\/]+)/g, "/([^\\/]+?)");
+        ? path
+            .replace(/\/?$/, "\\/?")
+            .replace(/\/:([^\\/]+)\(/g, "\\/(")
+            .replace(/\/:([^\\/]+)/g, "/([^\\/]+?)")
+        : "";
       if (this.caseSensitive === true) {
         return regexp ? new RegExp(`^${regexp}$`) : null;
       }
@@ -175,8 +178,11 @@ class Route {
   #compileMiddlewareRegExp(path) {
     try {
       let regexp = path
-        ?.replace(/\/?$/, "\\/?")
-        ?.replace(/\/:([^\\/]+)/g, "/([^\\/]+?)");
+        ? path
+            .replace(/\/?$/, "\\/?")
+            .replace(/\/:([^\\/]+)\(/g, "\\/(")
+            .replace(/\/:([^\\/]+)/g, "/([^\\/]+?)")
+        : "";
       if (this.caseSensitive === true) {
         return regexp ? new RegExp(`^${regexp}(?:[\\/].*)?$`) : null;
       }
@@ -187,11 +193,11 @@ class Route {
   }
 
   #getParams(path) {
-    let params = path?.match(/\/:([^\/]*)/g)?.map((e) => e.replace("/:", ""));
+    let params = path ? path.match(/\/:([^\/]*)/g) : null;
     if (!params) {
-      params = undefined;
+      return undefined;
     }
-    return params;
+    return params.map((e) => e.replace("/:", "").replace(/\(.*/, ""));
   }
 }
 

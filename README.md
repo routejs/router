@@ -43,6 +43,11 @@ app.get("/", function (req, res) {
   res.end("Ok");
 });
 
+// Create 404 page not found error
+app.use(function (req, res) {
+  res.writeHead(404).end("404 Page Not Found");
+});
+
 const server = http.createServer(app.handler());
 server.listen(3000);
 ```
@@ -54,14 +59,11 @@ Routejs is very simple and flexible, it support both object and array based url 
 Let's create `urls.js` urls file for routes:
 
 ```javascript
-const { route } = require("@routejs/router");
-const { getBlog, createBlog, updateBlog, deleteBlog } = require("./blogs");
+const { route, use } = require("@routejs/router");
 
 const urls = [
-  route("get", "/blog", getBlog),
-  route("post", "/blog", createBlog),
-  route("put", "/blog", updateBlog),
-  route("delete", "/blog", deleteBlog),
+  route("get", "/", (req, res) => res.end("Ok")),
+  use((req, res) => res.writeHead(404).end("404 Page Not Found")),
 ];
 
 module.exports = urls;
@@ -70,8 +72,8 @@ module.exports = urls;
 Use urls in routejs app:
 
 ```javascript
-const http = require("http");
 const { Router } = require("@routejs/router");
+const http = require("http");
 const urls = require("./urls");
 
 const app = new Router();

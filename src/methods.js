@@ -72,7 +72,7 @@ function setRoute({ host, method, path, callbacks, group, name }) {
 function mergeRoute({ host, method, group, callbacks }) {
   const routes = [];
   if (callbacks instanceof Router) {
-    callbacks.routes()?.forEach((route) => {
+    callbacks.routes().forEach((route) => {
       routes.push(
         setRoute({
           host: host ?? route.host,
