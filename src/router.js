@@ -191,7 +191,7 @@ class Router {
 
   route(name) {
     let path = null;
-    this.routes()?.map((route) => {
+    this.routes().map((route) => {
       if (route.name === name) {
         path = route.path;
       }
@@ -215,7 +215,7 @@ class Router {
 
   #mergeRoute({ host, method, group, callbacks }) {
     if (callbacks instanceof Router) {
-      callbacks.routes()?.forEach((route) => {
+      callbacks.routes().forEach((route) => {
         this.#setRoute({
           host: host ?? route.host,
           method: method ?? route.method,
