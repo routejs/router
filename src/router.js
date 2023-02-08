@@ -256,10 +256,10 @@ class Router {
   }
 
   #handle(routes, request, response) {
-    const requestHost = request?.headers?.host;
-    const requestMethod = request?.method;
-    const requestUrl = request?.url;
-    const parsedUrl = url.parse(requestUrl);
+    const requestHost = request.headers ? request.headers.host : null;
+    const requestMethod = request.method;
+    const requestUrl = request.url;
+    const parsedUrl = url.parse(requestUrl ? requestUrl : "");
     const requestPath = parsedUrl.pathname;
     const callStack = [];
     let callIndex = 0;
@@ -356,18 +356,6 @@ class Router {
     }
 
     runCallStack(callStack, callIndex);
-
-    // 404 page not found
-    if (
-      "headersSent" in response &&
-      "statusCode" in response &&
-      "end" in response
-    ) {
-      if (!response.headersSent) {
-        response.statusCode = 404;
-        response.end(`Cannot ${requestMethod} ${requestUrl}`);
-      }
-    }
   }
 
   handler() {
