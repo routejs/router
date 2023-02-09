@@ -9,8 +9,8 @@ Routejs provide simple and elegant apis for http routing.
 
 ## Features
 
-- Fast and flexible routing
-- Simple and lightweight
+- Fast and lightweight
+- Simple and flexible
 - Named routing
 - Group routing
 - Subdomain based routing
@@ -59,10 +59,12 @@ Routejs is very simple and flexible, it support both object and array based url 
 Let's create `urls.js` urls file for routes:
 
 ```javascript
-const { route, use } = require("@routejs/router");
+const { path, use } = require("@routejs/router");
 
+// Url routes
 const urls = [
-  route("get", "/", (req, res) => res.end("Ok")),
+  path("get", "/", (req, res) => res.end("Ok")),
+  // Create 404 page not found error
   use((req, res) => res.writeHead(404).end("404 Page Not Found")),
 ];
 
@@ -78,7 +80,8 @@ const urls = require("./urls");
 
 const app = new Router();
 
-app.useRoutes(urls);
+// Use url routes
+app.use(urls);
 
 const server = http.createServer(app.handler());
 server.listen(3000);

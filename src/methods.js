@@ -8,44 +8,24 @@ const methods = {
     if (typeof callbacks[0] === "string" || callbacks[0] instanceof String) {
       if (callbacks.length < 2) {
         throw new TypeError(
-          "Error: use function accepts only function or router as an argument"
+          "Error: use function callback accepts function or router as an argument"
         );
       }
-      if (callbacks.length == 2) {
-        return mergeRoute({
-          group: callbacks[0],
-          callbacks: callbacks[1],
-        });
-      } else {
-        return setRoute({ path: callbacks[0], callbacks: callbacks.slice(1) });
-      }
+      return mergeRoute({
+        group: callbacks[0],
+        callbacks: callbacks.slice(1),
+      });
     } else {
-      return setRoute({ callbacks: callbacks });
+      return mergeRoute({ callbacks: callbacks });
     }
   },
 
-  route(method, path, ...callbacks) {
+  path(method, path, ...callbacks) {
     return setRoute({ method, path, callbacks });
   },
 
   all(path, ...callbacks) {
     return setRoute({ method: supportedMethod, path, callbacks });
-  },
-
-  path(path, routes) {
-    if (!(typeof path === "string" || path instanceof String)) {
-      throw new TypeError(
-        "Error: group path accepts only string as an argument"
-      );
-    }
-
-    if (typeof routes === "function") {
-      const router = new Router();
-      routes(router);
-      return mergeRoute({ group: path, callbacks: router });
-    } else {
-      return mergeRoute({ group: path, callbacks: routes });
-    }
   },
 
   domain(host, routes) {
@@ -105,8 +85,10 @@ function mergeRoute({ host, method, group, callbacks }) {
             name: route.name,
           })
         );
+      } else if (Array.isArray(route) || route instanceof Router) {
+        routes.push(mergeRoute({ host, method, group, callbacks: route }));
       } else {
-        throw new TypeError("Error: route should be instanceof Route");
+        routes.push(setRoute({ host, method, path: group, callbacks }));
       }
     });
   } else {

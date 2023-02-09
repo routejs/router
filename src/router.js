@@ -125,32 +125,16 @@ class Router {
     if (typeof callbacks[0] === "string" || callbacks[0] instanceof String) {
       if (callbacks.length < 2) {
         throw new TypeError(
-          "Error: use function accepts only function or router as an argument"
+          "Error: use function callback accepts function or router as an argument"
         );
       }
-      if (callbacks.length == 2) {
-        return this.#mergeRoute({
-          group: callbacks[0],
-          callbacks: callbacks[1],
-        });
-      } else {
-        return this.#setRoute({
-          path: callbacks[0],
-          callbacks: callbacks.slice(1),
-        });
-      }
+      return this.#mergeRoute({
+        group: callbacks[0],
+        callbacks: callbacks.slice(1),
+      });
     } else {
-      return this.#setRoute({ callbacks: callbacks });
+      this.#mergeRoute({ callbacks: callbacks });
     }
-  }
-
-  useRoutes(routes) {
-    if (!Array.isArray(routes) && !(routes instanceof Router)) {
-      throw new TypeError(
-        "Error: useRoutes accepts only routes or router as an argument"
-      );
-    }
-    this.#mergeRoute({ callbacks: routes });
   }
 
   group(path, callback) {
@@ -244,10 +228,10 @@ class Router {
             group: group ? path.join(group, route.group ?? "") : route.group,
             name: route.name,
           });
-        } else if (Array.isArray(route)) {
+        } else if (Array.isArray(route) || route instanceof Router) {
           this.#mergeRoute({ host, method, group, callbacks: route });
         } else {
-          throw new TypeError("Error: route should be instanceof Route");
+          this.#setRoute({ host, method, path: group, callbacks });
         }
       });
     } else {
@@ -296,8 +280,8 @@ class Router {
         // Execute callbacks
         if (error === null && callbacks[callbackIndex].length <= 3) {
           callbacks[callbackIndex](request, response, function (err = null) {
-            if (err === "route") {
-              // Execute next callstack
+            if (err === "skip") {
+              // Skip all middlewares of current callstack and execute next callstack
               callIndex++;
               runCallStack(callStack, callIndex);
             } else {
@@ -313,8 +297,8 @@ class Router {
             request,
             response,
             function (err = null) {
-              if (err === "route") {
-                // Execute next callstack
+              if (err === "skip") {
+                // Skip all middlewares of current callstack and execute next callstack
                 callIndex++;
                 runCallStack(callStack, callIndex);
               } else {
