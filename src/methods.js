@@ -88,11 +88,11 @@ function mergeRoute({ host, method, group, callbacks }) {
       } else if (Array.isArray(route) || route instanceof Router) {
         routes.push(mergeRoute({ host, method, group, callbacks: route }));
       } else {
-        routes.push(setRoute({ host, method, path: group, callbacks }));
+        routes.push(setRoute({ host, method, group, callbacks }));
       }
     });
   } else {
-    routes.push(setRoute({ host, method, path: group, callbacks }));
+    routes.push(setRoute({ host, method, group, callbacks }));
   }
   return routes;
 }

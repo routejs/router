@@ -12,8 +12,16 @@ describe("Routing test", () => {
     res.end("GET");
   });
 
-  app.get("/params/:name", function (req, res) {
+  app.get("{name}/dashboard", function (req, res) {
     res.end(req.params.name);
+  });
+
+  app.get("/params/{name}/{id}", function (req, res) {
+    res.end(`${req.params.name},${req.params.id}`);
+  });
+
+  app.get("/digit/{id:(\\d+)}", function (req, res) {
+    res.end(req.params.id);
   });
 
   app.post("/", function (req, res) {
@@ -26,6 +34,10 @@ describe("Routing test", () => {
 
   app.delete("/", function (req, res) {
     res.end("DELETE");
+  });
+
+  app.any(["get", "post"], "/any", function (req, res) {
+    res.end(req.method.toUpperCase());
   });
 
   app.use(function (req, res) {
@@ -41,13 +53,35 @@ describe("Routing test", () => {
       });
   });
 
-  test("GET /params/testing", async () => {
+  test("GET /user/dashboard", async () => {
     await request(app.handler())
-      .get("/params/testing")
+      .get("/user/dashboard")
       .expect(200)
       .then((res) => {
-        expect(res.text).toBe("testing");
+        expect(res.text).toBe("user");
       });
+  });
+
+  test("GET /params/user/1", async () => {
+    await request(app.handler())
+      .get("/params/user/1")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("user,1");
+      });
+  });
+
+  test("GET /digit/100", async () => {
+    await request(app.handler())
+      .get("/digit/100")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("100");
+      });
+  });
+
+  test("GET /digit/a", async () => {
+    await request(app.handler()).get("/digit/a").expect(404);
   });
 
   test("POST /", async () => {
@@ -74,6 +108,24 @@ describe("Routing test", () => {
       .expect(200)
       .then((res) => {
         expect(res.text).toBe("DELETE");
+      });
+  });
+
+  test("GET /any", async () => {
+    await request(app.handler())
+      .get("/")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("GET");
+      });
+  });
+
+  test("POST /any", async () => {
+    await request(app.handler())
+      .post("/")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("POST");
       });
   });
 

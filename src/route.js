@@ -2,12 +2,14 @@ const supportedMethod = require("./supported-method");
 
 class Route {
   host = null;
+  hostRegexp = null;
   method = null;
   path = null;
+  pathRegexp = null;
+  group = null;
   name = null;
   params = null;
-  regexp = null;
-  group = null;
+  subdomains = null;
   callbacks = null;
   caseSensitive = false;
 
@@ -33,15 +35,17 @@ class Route {
           }
           return e.toUpperCase();
         });
-      } else if (
-        (typeof method === "string" || method instanceof String) &&
-        !supportedMethod.includes(method.toUpperCase())
-      ) {
-        throw new TypeError(
-          `Error: ${method.toUpperCase()} method is not supported`
-        );
-      } else {
+      } else if (typeof method === "string" || method instanceof String) {
+        if (!supportedMethod.includes(method.toUpperCase())) {
+          throw new TypeError(
+            `Error: ${method.toUpperCase()} method is not supported`
+          );
+        }
         method = method.toUpperCase();
+      } else {
+        throw new TypeError(
+          "Error: route method accepts only string or array of string as an argument"
+        );
       }
     }
 
@@ -58,17 +62,19 @@ class Route {
     }
 
     this.host = host;
+    this.hostRegexp = host ? this.#compileHostRegExp(host) : undefined;
     this.method = method;
     this.path = path;
-    this.name = name;
-    this.params = this.#getParams(path);
-    this.caseSensitive = caseSensitive ?? false;
-    this.regexp = path
+    this.pathRegexp = path
       ? this.#compileRouteRegExp(path)
       : group
       ? this.#compileMiddlewareRegExp(group)
       : this.#compileMiddlewareRegExp("/");
     this.group = group;
+    this.name = name;
+    this.params = this.#getParams(path);
+    this.subdomains = this.#getParams(host);
+    this.caseSensitive = caseSensitive ?? false;
     this.callbacks = Array.isArray(callbacks)
       ? callbacks.map((callback) => {
           if (typeof callback !== "function") {
@@ -115,7 +121,7 @@ class Route {
       );
     }
 
-    if (this.regexp === null) {
+    if (this.pathRegexp === null) {
       return false;
     }
 
@@ -125,23 +131,37 @@ class Route {
       path: this.path,
       callbacks: this.callbacks,
       params: {},
+      subdomains: {},
     };
 
-    if (!!this.host && host !== this.host) {
-      return false;
-    }
-
-    if (!!this.method && Array.isArray(this.method)) {
-      if (!this.method.includes(method.toUpperCase())) {
+    if (!!this.hostRegexp) {
+      const match = this.hostRegexp.exec(host);
+      if (match === null) {
         return false;
       }
-    } else {
-      if (!!this.method && method.toUpperCase() !== this.method) {
+      if (match.length > 1) {
+        let index = 0;
+        for (let i = 1; i < match.length ?? 0; i++) {
+          if (this.subdomains && this.subdomains.hasOwnProperty(index)) {
+            route.subdomains[this.subdomains[index]] = match[i];
+          }
+          index++;
+        }
+      }
+    }
+
+    if (!!this.method) {
+      if (
+        Array.isArray(this.method) &&
+        !this.method.includes(method.toUpperCase())
+      ) {
+        return false;
+      } else if (method.toUpperCase() !== this.method) {
         return false;
       }
     }
 
-    const match = this.regexp.exec(path);
+    const match = this.pathRegexp.exec(path);
     if (match === null) {
       return false;
     }
@@ -158,13 +178,32 @@ class Route {
     return route;
   }
 
+  #compileHostRegExp(host) {
+    try {
+      let regexp = host
+        ? host
+            .replace(/\{([^\}]+)\:/g, "")
+            .replace(/\)\}/g, ")")
+            .replace(/\{(.*?)\}/g, "([^.]+?)")
+        : "";
+      if (this.caseSensitive === true) {
+        return regexp ? new RegExp(`^${regexp}$`) : null;
+      }
+      return regexp ? new RegExp(`^${regexp}$`, "i") : null;
+    } catch (err) {
+      throw new TypeError(`Error: ${host} invalid regular expression`);
+    }
+  }
+
   #compileRouteRegExp(path) {
     try {
       let regexp = path
         ? path
-            .replace(/\/?$/, "\\/?")
-            .replace(/\/:([^\\/]+)\(/g, "\\/(")
-            .replace(/\/:([^\\/]+)/g, "/([^\\/]+?)")
+            .replace(/^\/?|\/?$/g, "/?")
+            .replace(/\/\?\/\?/, "/?")
+            .replace(/\{([^\}]+)\:/g, "")
+            .replace(/\)\}/g, ")")
+            .replace(/\{(.*?)\}/g, "([^\\/]+?)")
         : "";
       if (this.caseSensitive === true) {
         return regexp ? new RegExp(`^${regexp}$`) : null;
@@ -179,25 +218,27 @@ class Route {
     try {
       let regexp = path
         ? path
-            .replace(/\/?$/, "\\/?")
-            .replace(/\/:([^\\/]+)\(/g, "\\/(")
-            .replace(/\/:([^\\/]+)/g, "/([^\\/]+?)")
+            .replace(/^\/?|\/?$/g, "/?")
+            .replace(/\/\?\/\?/, "/?")
+            .replace(/\{([^\}]+)\:/g, "")
+            .replace(/\)\}/g, ")")
+            .replace(/\{(.*?)\}/g, "([^\\/]+?)")
         : "";
       if (this.caseSensitive === true) {
-        return regexp ? new RegExp(`^${regexp}(?:[\\/].*)?$`) : null;
+        return regexp ? new RegExp(`^${regexp}(?:.*)?$`) : null;
       }
-      return regexp ? new RegExp(`^${regexp}(?:[\\/].*)?$`, "i") : null;
+      return regexp ? new RegExp(`^${regexp}(?:.*)?$`, "i") : null;
     } catch (err) {
       throw new TypeError(`Error: ${path} invalid regular expression`);
     }
   }
 
   #getParams(path) {
-    let params = path ? path.match(/\/:([^\/]*)/g) : null;
+    let params = path ? path.match(/(?<=\{).+?(?=\})/g) : null;
     if (!params) {
       return undefined;
     }
-    return params.map((e) => e.replace("/:", "").replace(/\(.*/, ""));
+    return params.map((e) => e.replace(/\:\((.*)?/, ""));
   }
 }
 

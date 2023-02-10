@@ -231,24 +231,21 @@ class Router {
         } else if (Array.isArray(route) || route instanceof Router) {
           this.#mergeRoute({ host, method, group, callbacks: route });
         } else {
-          this.#setRoute({ host, method, path: group, callbacks });
+          this.#setRoute({ host, method, group, callbacks });
         }
       });
     } else {
-      this.#setRoute({ host, method, path: group, callbacks });
+      this.#setRoute({ host, method, group, callbacks });
     }
   }
 
-  #handle(routes, request, response) {
-    const requestHost = request.headers ? request.headers.host : null;
-    const requestMethod = request.method;
-    const requestUrl = request.url;
+  handle({ requestHost, requestMethod, requestUrl, request, response }) {
     const parsedUrl = url.parse(requestUrl ? requestUrl : "");
     const requestPath = parsedUrl.pathname;
     const callStack = [];
     let callIndex = 0;
 
-    routes.forEach((e) => {
+    this.routes().forEach((e) => {
       const match = e.match({
         host: requestHost,
         method: requestMethod,
@@ -258,6 +255,7 @@ class Router {
         callStack.push(match.callbacks);
         if (match.method && match.params) {
           request.params = match.params;
+          request.subdomains = match.subdomains;
         }
       }
     });
@@ -343,8 +341,30 @@ class Router {
   }
 
   handler() {
-    return (request, response) =>
-      this.#handle(this.routes(), request, response);
+    function requestHandler(request, response) {
+      var requestHost = request.headers ? request.headers.host : null;
+      var requestMethod = request.method;
+      var requestUrl = request.url;
+
+      if (!requestHost && "getHeader" in request) {
+        requestHost = request.getHeader("host");
+      }
+      if (!requestMethod && "getMethod" in request) {
+        requestMethod = request.getMethod();
+      }
+      if (!requestUrl && "getUrl" in request) {
+        requestUrl = request.getUrl();
+      }
+
+      this.handle({
+        requestHost,
+        requestMethod,
+        requestUrl,
+        request,
+        response,
+      });
+    }
+    return requestHandler.bind(this);
   }
 }
 
