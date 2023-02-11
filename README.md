@@ -48,8 +48,7 @@ app.use(function (req, res) {
   res.writeHead(404).end("404 Page Not Found");
 });
 
-const server = http.createServer(app.handler());
-server.listen(3000);
+http.createServer(app.handler()).listen(3000);
 ```
 
 ## Url route example
@@ -83,13 +82,12 @@ const app = new Router();
 // Use url routes
 app.use(urls);
 
-const server = http.createServer(app.handler());
-server.listen(3000);
+http.createServer(app.handler()).listen(3000);
 ```
 
 ## Documentation
 
-- Learn more from [Documentation](https://github.com/routejs/docs/) file.
+- Learn more from [Documentation](https://github.com/routejs/docs/)
 - Documentation : [https://routejs.github.io/docs](https://routejs.github.io/docs)
 
 ## License
