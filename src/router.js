@@ -214,7 +214,7 @@ class Router {
         });
       });
     } else if (Array.isArray(callbacks)) {
-      callbacks.forEach((route) => {
+      for (const route of callbacks) {
         if (route instanceof Route) {
           this.#setRoute({
             host: host ?? route.host,
@@ -232,8 +232,9 @@ class Router {
           this.#mergeRoute({ host, method, group, callbacks: route });
         } else {
           this.#setRoute({ host, method, group, callbacks });
+          break;
         }
-      });
+      }
     } else {
       this.#setRoute({ host, method, group, callbacks });
     }
