@@ -243,31 +243,15 @@ class Router {
   handle({ requestHost, requestMethod, requestUrl, request, response }) {
     const parsedUrl = url.parse(requestUrl ? requestUrl : "");
     const requestPath = parsedUrl.pathname;
-    const callStack = [];
+    const callStack = this.routes();
     let callIndex = 0;
-
-    this.routes().forEach((e) => {
-      const match = e.match({
-        host: requestHost,
-        method: requestMethod,
-        path: requestPath,
-      });
-      if (match !== false) {
-        callStack.push(match.callbacks);
-        if (match.method && match.params) {
-          request.params = match.params;
-          request.subdomains = match.subdomains;
-        }
-      }
-    });
 
     function runMiddleware(callbacks, callbackIndex, error = null) {
       try {
-        if (callbackIndex >= callbacks.length) {
+        if (typeof callbacks[callbackIndex] === "undefined") {
           // No more middlewares to execute
           // Execute next callstack
-          callIndex++;
-          return runCallStack(callStack, callIndex, error);
+          return runCallStack(callStack, ++callIndex, error);
         }
 
         if (typeof callbacks[callbackIndex] !== "function") {
@@ -281,12 +265,10 @@ class Router {
           callbacks[callbackIndex](request, response, function (err = null) {
             if (err === "skip") {
               // Skip all middlewares of current callstack and execute next callstack
-              callIndex++;
-              runCallStack(callStack, callIndex);
+              runCallStack(callStack, ++callIndex);
             } else {
               // Execute next middleware
-              callbackIndex++;
-              runMiddleware(callbacks, callbackIndex, err);
+              runMiddleware(callbacks, ++callbackIndex, err);
             }
           });
         } else if (error !== null && callbacks[callbackIndex].length > 3) {
@@ -298,24 +280,20 @@ class Router {
             function (err = null) {
               if (err === "skip") {
                 // Skip all middlewares of current callstack and execute next callstack
-                callIndex++;
-                runCallStack(callStack, callIndex);
+                runCallStack(callStack, ++callIndex);
               } else {
                 // Execute next middleware
-                callbackIndex++;
-                runMiddleware(callbacks, callbackIndex, err);
+                runMiddleware(callbacks, ++callbackIndex, err);
               }
             }
           );
         } else {
           // Skip current middleware
-          callbackIndex++;
-          runMiddleware(callbacks, callbackIndex, error);
+          runMiddleware(callbacks, ++callbackIndex, error);
         }
       } catch (exception) {
-        callbackIndex++;
-        if (callIndex < callStack.length) {
-          runMiddleware(callbacks, callbackIndex, exception);
+        if (typeof callStack[callIndex] !== "undefined") {
+          runMiddleware(callbacks, ++callbackIndex, exception);
         } else {
           throw exception;
         }
@@ -323,7 +301,7 @@ class Router {
     }
 
     function runCallStack(callStack, callIndex, error = null) {
-      if (callIndex >= callStack.length) {
+      if (typeof callStack[callIndex] === "undefined") {
         if (error !== null) {
           if (error instanceof Error) {
             throw error;
@@ -335,7 +313,18 @@ class Router {
         return;
       }
       // Execute callbacks
-      runMiddleware(callStack[callIndex], 0, error);
+      const match = callStack[callIndex].match({
+        host: requestHost,
+        method: requestMethod,
+        path: requestPath,
+      });
+      if (match !== false) {
+        request.params = match.params;
+        request.subdomains = match.subdomains;
+        runMiddleware(match.callbacks, 0, error);
+      } else {
+        runCallStack(callStack, ++callIndex, error);
+      }
     }
 
     runCallStack(callStack, callIndex);
