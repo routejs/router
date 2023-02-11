@@ -243,65 +243,81 @@ class Router {
   handle({ requestHost, requestMethod, requestUrl, request, response }) {
     const parsedUrl = url.parse(requestUrl ? requestUrl : "");
     const requestPath = parsedUrl.pathname;
-    const callStack = this.routes();
-    let callIndex = 0;
+    const callStack = {
+      stack: this.routes(),
+      index: 0,
+    };
 
-    function runMiddleware(callbacks, callbackIndex, error = null) {
+    function runMiddleware(callbacks, error = null) {
       try {
-        if (typeof callbacks[callbackIndex] === "undefined") {
+        if (typeof callbacks.stack[callbacks.index] === "undefined") {
           // No more middlewares to execute
           // Execute next callstack
-          return runCallStack(callStack, ++callIndex, error);
+          callStack.index++;
+          return runCallStack(callStack, error);
         }
 
-        if (typeof callbacks[callbackIndex] !== "function") {
+        if (typeof callbacks.stack[callbacks.index] !== "function") {
           throw new TypeError(
             "Error: callback argument only accepts function as an argument"
           );
         }
 
         // Execute callbacks
-        if (error === null && callbacks[callbackIndex].length <= 3) {
-          callbacks[callbackIndex](request, response, function (err = null) {
-            if (err === "skip") {
-              // Skip all middlewares of current callstack and execute next callstack
-              runCallStack(callStack, ++callIndex);
-            } else {
-              // Execute next middleware
-              runMiddleware(callbacks, ++callbackIndex, err);
+        if (error === null && callbacks.stack[callbacks.index].length <= 3) {
+          callbacks.stack[callbacks.index](
+            request,
+            response,
+            function (err = null) {
+              if (err === "skip") {
+                // Skip all middlewares of current callstack and execute next callstack
+                callStack.index++;
+                runCallStack(callStack);
+              } else {
+                // Execute next middleware
+                callbacks.index++;
+                runMiddleware(callbacks, err);
+              }
             }
-          });
-        } else if (error !== null && callbacks[callbackIndex].length > 3) {
+          );
+        } else if (
+          error !== null &&
+          callbacks.stack[callbacks.index].length > 3
+        ) {
           // Execute error handler
-          callbacks[callbackIndex](
+          callbacks.stack[callbacks.index](
             error,
             request,
             response,
             function (err = null) {
               if (err === "skip") {
                 // Skip all middlewares of current callstack and execute next callstack
-                runCallStack(callStack, ++callIndex);
+                callStack.index++;
+                runCallStack(callStack);
               } else {
                 // Execute next middleware
-                runMiddleware(callbacks, ++callbackIndex, err);
+                callbacks.index++;
+                runMiddleware(callbacks, err);
               }
             }
           );
         } else {
           // Skip current middleware
-          runMiddleware(callbacks, ++callbackIndex, error);
+          callbacks.index++;
+          runMiddleware(callbacks, error);
         }
       } catch (exception) {
-        if (typeof callStack[callIndex] !== "undefined") {
-          runMiddleware(callbacks, ++callbackIndex, exception);
+        callbacks.index++;
+        if (typeof callStack.stack[callStack.index] !== "undefined") {
+          runMiddleware(callbacks, exception);
         } else {
           throw exception;
         }
       }
     }
 
-    function runCallStack(callStack, callIndex, error = null) {
-      if (typeof callStack[callIndex] === "undefined") {
+    function runCallStack(callStack, error = null) {
+      if (typeof callStack.stack[callStack.index] === "undefined") {
         if (error !== null) {
           if (error instanceof Error) {
             throw error;
@@ -313,7 +329,7 @@ class Router {
         return;
       }
       // Execute callbacks
-      const match = callStack[callIndex].match({
+      const match = callStack.stack[callStack.index].match({
         host: requestHost,
         method: requestMethod,
         path: requestPath,
@@ -321,13 +337,18 @@ class Router {
       if (match !== false) {
         request.params = match.params;
         request.subdomains = match.subdomains;
-        runMiddleware(match.callbacks, 0, error);
+        const callbacks = {
+          stack: match.callbacks,
+          index: 0,
+        };
+        return runMiddleware(callbacks, error);
       } else {
-        runCallStack(callStack, ++callIndex, error);
+        callStack.index++;
+        return runCallStack(callStack, error);
       }
     }
 
-    runCallStack(callStack, callIndex);
+    runCallStack(callStack);
   }
 
   handler() {

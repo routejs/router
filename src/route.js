@@ -73,7 +73,7 @@ class Route {
       : this.#compileMiddlewareRegExp("/");
     this.group = group;
     this.name = name;
-    this.params = this.#getParams(path);
+    this.params = path ? this.#getParams(path) : this.#getParams(group);
     this.subdomains = this.#getParams(host);
     this.callbacks = Array.isArray(callbacks)
       ? callbacks.map((callback) => {
@@ -184,7 +184,7 @@ class Route {
         ? host
             .replace(/\{([^\}]+)\:/g, "")
             .replace(/\)\}/g, ")")
-            .replace(/\{(.*?)\}/g, "([^.]+?)")
+            .replace(/\{(.*?)\}/g, "(?:([^.]+?))")
         : "";
       if (this.caseSensitive === true) {
         return regexp ? new RegExp(`^${regexp}$`) : null;
@@ -203,7 +203,7 @@ class Route {
             .replace(/\/\?\/\?/, "/?")
             .replace(/\{([^\}]+)\:/g, "")
             .replace(/\)\}/g, ")")
-            .replace(/\{(.*?)\}/g, "([^\\/]+?)")
+            .replace(/\{(.*?)\}/g, "(?:([^/]+?))")
         : "";
       if (this.caseSensitive === true) {
         return regexp ? new RegExp(`^${regexp}$`) : null;
@@ -222,12 +222,12 @@ class Route {
             .replace(/\/\?\/\?/, "/?")
             .replace(/\{([^\}]+)\:/g, "")
             .replace(/\)\}/g, ")")
-            .replace(/\{(.*?)\}/g, "([^\\/]+?)")
+            .replace(/\{(.*?)\}/g, "(?:([^/]+?))")
         : "";
       if (this.caseSensitive === true) {
-        return regexp ? new RegExp(`^${regexp}(?:.*)?$`) : null;
+        return regexp ? new RegExp(`^${regexp}(?=\/|$)`) : null;
       }
-      return regexp ? new RegExp(`^${regexp}(?:.*)?$`, "i") : null;
+      return regexp ? new RegExp(`^${regexp}(?=\/|$)`, "i") : null;
     } catch (err) {
       throw new TypeError(`Error: ${path} invalid regular expression`);
     }

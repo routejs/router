@@ -4,6 +4,20 @@ const { Router } = require("../index");
 describe("Middleware test", () => {
   const app = new Router();
   const blog = new Router();
+  const group = new Router();
+
+  app.use(function (req, res, next) {
+    next();
+  });
+
+  app.use(
+    function (req, res, next) {
+      next();
+    },
+    function (req, res, next) {
+      next();
+    }
+  );
 
   app.use(
     "/multiple",
@@ -21,7 +35,7 @@ describe("Middleware test", () => {
     next();
   });
 
-  app.get("/home", function (req, res, next) {
+  app.get("/home", function (req, res) {
     res.end();
   });
 
@@ -30,16 +44,30 @@ describe("Middleware test", () => {
     next();
   });
 
-  app.get("/params/{name}", function (req, res, next) {
+  app.get("/params/{name}", function (req, res) {
     res.end();
   });
 
-  blog.get("/", function (req, res, next) {
+  blog.get("/", function (req, res) {
     res.end("Ok");
   });
 
   app.use("/blog", blog);
   app.use("/urls", blog.routes());
+
+  group.get("/", function (req, res) {
+    res.end(req.params.name);
+  });
+
+  app.use("/group/{name}", group);
+
+  app.get("/error", function (req, res) {
+    throw new Error("Ok");
+  });
+
+  app.use(function (err, req, res, next) {
+    res.end(err.message);
+  });
 
   test("GET /multiple", async () => {
     await request(app.handler())
@@ -83,6 +111,24 @@ describe("Middleware test", () => {
       .expect(200)
       .then((res) => {
         expect(res.text).toBe("Ok");
+      });
+  });
+
+  test("GET /error", async () => {
+    await request(app.handler())
+      .get("/error")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("Ok");
+      });
+  });
+
+  test("GET /group/user", async () => {
+    await request(app.handler())
+      .get("/group/user")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("user");
       });
   });
 });
