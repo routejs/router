@@ -69,7 +69,7 @@ function mergeRoute({ host, method, group, callbacks }) {
       );
     });
   } else if (Array.isArray(callbacks)) {
-    callbacks.forEach((route) => {
+    for (const route of callbacks) {
       if (route instanceof Route) {
         routes.push(
           setRoute({
@@ -89,8 +89,9 @@ function mergeRoute({ host, method, group, callbacks }) {
         routes.push(mergeRoute({ host, method, group, callbacks: route }));
       } else {
         routes.push(setRoute({ host, method, group, callbacks }));
+        break;
       }
-    });
+    }
   } else {
     routes.push(setRoute({ host, method, group, callbacks }));
   }
