@@ -61,6 +61,7 @@ class Route {
       );
     }
 
+    this.caseSensitive = caseSensitive ?? false;
     this.host = host;
     this.hostRegexp = host ? this.#compileHostRegExp(host) : undefined;
     this.method = method;
@@ -74,7 +75,6 @@ class Route {
     this.name = name;
     this.params = this.#getParams(path);
     this.subdomains = this.#getParams(host);
-    this.caseSensitive = caseSensitive ?? false;
     this.callbacks = Array.isArray(callbacks)
       ? callbacks.map((callback) => {
           if (typeof callback !== "function") {
