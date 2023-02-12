@@ -173,14 +173,22 @@ class Router {
     return this.#routes;
   }
 
-  route(name) {
-    let path = null;
+  route(name, params = null) {
+    let namedRoute = null;
     this.routes().map((route) => {
       if (route.name === name) {
-        path = route.path;
+        namedRoute = route;
       }
     });
-    return path;
+    if (!!namedRoute.params) {
+      if (Array.isArray(params) && namedRoute.params.length !== params.length) {
+        throw new TypeError("Error: invalid route parameters");
+      }
+    }
+    // TODO
+    // Generate url for route parameters
+
+    return namedRoute && namedRoute.path;
   }
 
   #setRoute({ host, method, path, callbacks, group, name }) {
