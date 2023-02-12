@@ -22,11 +22,11 @@ describe("Routing test", () => {
 
   app.get("/params/{name}/{id}", function (req, res) {
     res.end(`${req.params.name},${req.params.id}`);
-  }).name("params");
+  }).setName("params");
 
   app.get("/digit/{id:(\\d+)}", function (req, res) {
     res.end(req.params.id);
-  }).name("digit");
+  }).setName("digit");
 
   app.post("/", function (req, res) {
     res.end("POST");
@@ -140,5 +140,13 @@ describe("Routing test", () => {
       .then((res) => {
         expect(res.text).toBe("Page Not Found");
       });
+  });
+
+  test("Get route url", () => {
+    expect(app.route("params", ["abc", 10])).toBe("/params/abc/10");
+  });
+
+  test("Get route url", () => {
+    expect(app.route("digit", [10])).toBe("/digit/10");
   });
 });
