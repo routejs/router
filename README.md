@@ -1,8 +1,8 @@
-## Routejs
+[![Routejs Logo](https://raw.githubusercontent.com/routejs/docs/main/routejs.jpg)](https://github.com/routejs/router)
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/routejs/docs/main/routejs.jpg" width="400px" alt="routejs logo">
-</p>
+[![NPM Version][npm-version-image]][npm-url]
+[![NPM Install Size][npm-install-size-image]][npm-install-size-url]
+[![NPM Downloads][npm-downloads-image]][npm-downloads-url]
 
 Routejs is a fast and lightweight http router for [Node.js](http://nodejs.org)
 
@@ -20,19 +20,19 @@ Routejs is a fast and lightweight http router for [Node.js](http://nodejs.org)
 
 Install using npm:
 
-```shell
-npm i @routejs/router
+```console
+$ npm i @routejs/router
 ```
 
 Install using yarn:
 
-```shell
-yarn add @routejs/router
+```console
+$ yarn add @routejs/router
 ```
 
-## Simple example
+## Example
 
-```javascript
+```js
 const { Router } = require("@routejs/router");
 const http = require("http");
 
@@ -56,7 +56,7 @@ Routejs is very simple and flexible, it support both object and array based url 
 
 Let's create `urls.js` urls file for routes:
 
-```javascript
+```js
 const { path, use } = require("@routejs/router");
 
 // Url routes
@@ -92,3 +92,10 @@ http.createServer(app.handler()).listen(3000);
 ## License
 
 [MIT License](https://github.com/routejs/router/blob/main/LICENSE)
+
+[npm-downloads-image]: https://badgen.net/npm/dm/@routejs/router
+[npm-downloads-url]: https://npmcharts.com/compare/@routejs/router?minimal=true
+[npm-install-size-image]: https://badgen.net/packagephobia/install/@routejs/router
+[npm-install-size-url]: https://packagephobia.com/result?p=@routejs/router
+[npm-url]: https://npmjs.org/package/@routejs/router
+[npm-version-image]: https://badgen.net/npm/v/@routejs/router
