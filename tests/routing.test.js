@@ -22,11 +22,11 @@ describe("Routing test", () => {
 
   app.get("/params/{name}/{id}", function (req, res) {
     res.end(`${req.params.name},${req.params.id}`);
-  });
+  }).name("params");
 
   app.get("/digit/{id:(\\d+)}", function (req, res) {
     res.end(req.params.id);
-  });
+  }).name("digit");
 
   app.post("/", function (req, res) {
     res.end("POST");
