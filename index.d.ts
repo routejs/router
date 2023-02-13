@@ -1,12 +1,8 @@
-declare type callback = (req: any, res: any, next?: any) => void;
-
-declare type errorHandler = (err: any, req: any, res: any, next?: any) => void;
-
 declare interface matchedRoute {
   host: string;
   method: string;
   path: string;
-  callbacks: Array<callback | errorHandler>;
+  callbacks: any[];
   params: object;
   subdomains: object;
 }
@@ -21,7 +17,7 @@ declare interface Route {
   name: string;
   params: string[];
   subdomains: string[];
-  callbacks: Array<callback | errorHandler>;
+  callbacks: any[];
   caseSensitive: boolean;
   setName(name: string): this;
   match(options: {
@@ -38,41 +34,34 @@ interface RouterOptions {
   host?: string;
 }
 
-declare class Router {
+export declare class Router {
   constructor(options?: RouterOptions);
-  checkout(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  copy(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  delete(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  get(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  head(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  lock(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  merge(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  mkactivity(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  mkcol(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  move(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  notify(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  options(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  patch(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  post(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  propfind(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  purge(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  put(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  report(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  search(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  subscribe(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  trace(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  unlock(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  unsubscribe(
-    path: string,
-    ...callbacks: Array<callback | errorHandler>
-  ): Route;
-  view(path: string, ...callbacks: Array<callback | errorHandler>): Route;
-  any(
-    methods: string | string[],
-    path: string,
-    ...callbacks: Array<callback | errorHandler>
-  ): Route;
-  all(path: string, ...callbacks: Array<callback | errorHandler>): Route;
+  checkout(path: string, ...callbacks: any[]): Route;
+  copy(path: string, ...callbacks: any[]): Route;
+  delete(path: string, ...callbacks: any[]): Route;
+  get(path: string, ...callbacks: any[]): Route;
+  head(path: string, ...callbacks: any[]): Route;
+  lock(path: string, ...callbacks: any[]): Route;
+  merge(path: string, ...callbacks: any[]): Route;
+  mkactivity(path: string, ...callbacks: any[]): Route;
+  mkcol(path: string, ...callbacks: any[]): Route;
+  move(path: string, ...callbacks: any[]): Route;
+  notify(path: string, ...callbacks: any[]): Route;
+  options(path: string, ...callbacks: any[]): Route;
+  patch(path: string, ...callbacks: any[]): Route;
+  post(path: string, ...callbacks: any[]): Route;
+  propfind(path: string, ...callbacks: any[]): Route;
+  purge(path: string, ...callbacks: any[]): Route;
+  put(path: string, ...callbacks: any[]): Route;
+  report(path: string, ...callbacks: any[]): Route;
+  search(path: string, ...callbacks: any[]): Route;
+  subscribe(path: string, ...callbacks: any[]): Route;
+  trace(path: string, ...callbacks: any[]): Route;
+  unlock(path: string, ...callbacks: any[]): Route;
+  unsubscribe(path: string, ...callbacks: any[]): Route;
+  view(path: string, ...callbacks: any[]): Route;
+  any(methods: string | string[], path: string, ...callbacks: any[]): Route;
+  all(path: string, ...callbacks: any[]): Route;
   use(...callbacks: any): Route;
   group(path: string, callback: any[]): Route;
   domain(host: string, callback: any[]): Route;
@@ -88,19 +77,14 @@ declare class Router {
   handler(): handler;
 }
 
-export default Router;
-
 export declare function use(...callbacks: any): Route;
 
 export declare function path(
   method: string | string[],
   path: string,
-  ...callbacks: Array<callback | errorHandler>
+  ...callbacks: any[]
 ): Route;
 
-export declare function all(
-  path: string,
-  ...callbacks: Array<callback | errorHandler>
-): Route;
+export declare function all(path: string, ...callbacks: any[]): Route;
 
 export declare function domain(host: string, routes: any): Route;
