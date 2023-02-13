@@ -1,5 +1,5 @@
 const request = require("supertest");
-const { Router } = require("../index");
+const { Router } = require("../index.cjs");
 
 describe("Middleware test", () => {
   const app = new Router();

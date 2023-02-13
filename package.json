@@ -1,8 +1,17 @@
 {
   "name": "@routejs/router",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Fast and lightweight http router for nodejs",
   "main": "index.js",
+  "type": "module",
+  "exports": {
+    "types": "./index.d.ts",
+    "node": {
+      "import": "./index.mjs",
+      "require": "./index.cjs"
+    },
+    "default": "./index.cjs"
+  },
   "directories": {
     "test": "tests"
   },
@@ -18,7 +27,8 @@
     "routejs",
     "http",
     "framework",
-    "nodejs"
+    "nodejs",
+    "library"
   ],
   "author": "Rajkumar Dusad",
   "license": "MIT",

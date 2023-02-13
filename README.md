@@ -11,7 +11,7 @@ Routejs is a fast and lightweight http router for [Node.js](http://nodejs.org)
 - Fast and lightweight
 - Named routing
 - Group routing
-- Subdomain based routing
+- Host based routing
 - Middleware support
 - Object and array based routing
 

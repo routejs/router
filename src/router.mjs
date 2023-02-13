@@ -1,7 +1,7 @@
-const path = require("node:path");
-const url = require("node:url");
-const Route = require("./route");
-const supportedMethod = require("./supported-method");
+import nodePath from "node:path";
+import url from "node:url";
+import Route from "./route.mjs";
+import supportedMethod from "./supported-method.mjs";
 
 class Router {
   #routes = [];
@@ -182,8 +182,13 @@ class Router {
     });
     let routePath = namedRoute && namedRoute.path;
     if (!!namedRoute.params) {
-      if (!Array.isArray(params) || namedRoute.params.length !== params.length) {
-        throw new TypeError("Error: invalid route parameters, please provide array of route parameters");
+      if (
+        !Array.isArray(params) ||
+        namedRoute.params.length !== params.length
+      ) {
+        throw new TypeError(
+          "Error: invalid route parameters, please provide array of route parameters"
+        );
       }
       for (const param of params) {
         routePath = routePath.replace(/\{(.*?)\}/, param);
@@ -214,11 +219,11 @@ class Router {
           method: method ?? route.method,
           path: group
             ? route.path
-              ? path.join(group, route.path)
+              ? nodePath.join(group, route.path)
               : null
             : route.path,
           callbacks: route.callbacks,
-          group: group ? path.join(group, route.group ?? "") : route.group,
+          group: group ? nodePath.join(group, route.group ?? "") : route.group,
           name: route.name,
         });
       });
@@ -230,11 +235,11 @@ class Router {
             method: method ?? route.method,
             path: group
               ? route.path
-                ? path.join(group, route.path)
+                ? nodePath.join(group, route.path)
                 : null
               : route.path,
             callbacks: route.callbacks,
-            group: group ? path.join(group, route.group ?? "") : route.group,
+            group: group ? nodePath.join(group, route.group ?? "") : route.group,
             name: route.name,
           });
         } else if (Array.isArray(route) || route instanceof Router) {
@@ -263,7 +268,7 @@ class Router {
           // No more middlewares to execute
           // Execute next callstack
           callStack.index++;
-          return runCallStack(callStack, error);
+          return runCallStack(error);
         }
 
         if (typeof callbacks.stack[callbacks.index] !== "function") {
@@ -281,7 +286,7 @@ class Router {
               if (err === "skip") {
                 // Skip all middlewares of current callstack and execute next callstack
                 callStack.index++;
-                runCallStack(callStack);
+                runCallStack();
               } else {
                 // Execute next middleware
                 callbacks.index++;
@@ -302,7 +307,7 @@ class Router {
               if (err === "skip") {
                 // Skip all middlewares of current callstack and execute next callstack
                 callStack.index++;
-                runCallStack(callStack);
+                runCallStack();
               } else {
                 // Execute next middleware
                 callbacks.index++;
@@ -325,7 +330,7 @@ class Router {
       }
     }
 
-    function runCallStack(callStack, error = null) {
+    function runCallStack(error = null) {
       if (typeof callStack.stack[callStack.index] === "undefined") {
         if (error !== null) {
           if (error instanceof Error) {
@@ -353,11 +358,11 @@ class Router {
         return runMiddleware(callbacks, error);
       } else {
         callStack.index++;
-        return runCallStack(callStack, error);
+        return runCallStack(error);
       }
     }
 
-    runCallStack(callStack);
+    runCallStack();
   }
 
   handler() {
@@ -388,4 +393,4 @@ class Router {
   }
 }
 
-module.exports = Router;
+export default Router;

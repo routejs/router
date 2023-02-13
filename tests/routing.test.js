@@ -1,5 +1,5 @@
 const request = require("supertest");
-const { Router } = require("../index");
+const { Router } = require("../index.cjs");
 
 describe("Routing test", () => {
   const app = new Router();
@@ -20,13 +20,17 @@ describe("Routing test", () => {
     res.end(req.params.name);
   });
 
-  app.get("/params/{name}/{id}", function (req, res) {
-    res.end(`${req.params.name},${req.params.id}`);
-  }).setName("params");
+  app
+    .get("/params/{name}/{id}", function (req, res) {
+      res.end(`${req.params.name},${req.params.id}`);
+    })
+    .setName("params");
 
-  app.get("/digit/{id:(\\d+)}", function (req, res) {
-    res.end(req.params.id);
-  }).setName("digit");
+  app
+    .get("/digit/{id:(\\d+)}", function (req, res) {
+      res.end(req.params.id);
+    })
+    .setName("digit");
 
   app.post("/", function (req, res) {
     res.end("POST");

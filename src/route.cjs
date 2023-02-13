@@ -1,4 +1,4 @@
-const supportedMethod = require("./supported-method");
+const supportedMethod = require("./supported-method.cjs");
 
 class Route {
   host = null;
