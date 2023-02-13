@@ -151,11 +151,10 @@ class Route {
     }
 
     if (!!this.method) {
-      if (
-        Array.isArray(this.method) &&
-        !this.method.includes(method.toUpperCase())
-      ) {
-        return false;
+      if (Array.isArray(this.method)) {
+        if (!this.method.includes(method.toUpperCase())) {
+          return false;
+        }
       } else if (method.toUpperCase() !== this.method) {
         return false;
       }
