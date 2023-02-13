@@ -121,7 +121,7 @@ describe("Routing test", () => {
 
   test("GET /any", async () => {
     await request(app.handler())
-      .get("/")
+      .get("/any")
       .expect(200)
       .then((res) => {
         expect(res.text).toBe("GET");
@@ -130,7 +130,7 @@ describe("Routing test", () => {
 
   test("POST /any", async () => {
     await request(app.handler())
-      .post("/")
+      .post("/any")
       .expect(200)
       .then((res) => {
         expect(res.text).toBe("POST");
