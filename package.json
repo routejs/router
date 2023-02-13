@@ -1,6 +1,6 @@
 {
   "name": "@routejs/router",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Fast and lightweight http router for nodejs",
   "main": "index.js",
   "type": "module",
