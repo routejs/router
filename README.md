@@ -4,7 +4,7 @@
 [![NPM Install Size][npm-install-size-image]][npm-install-size-url]
 [![NPM Downloads][npm-downloads-image]][npm-downloads-url]
 
-Routejs is a fast and lightweight http router for [Node.js](http://nodejs.org)
+Routejs is a fast and lightweight http routing engine for [Node.js](http://nodejs.org)
 
 ## Features
 
