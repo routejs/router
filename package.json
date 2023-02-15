@@ -1,7 +1,7 @@
 {
   "name": "@routejs/router",
-  "version": "2.0.5",
-  "description": "Fast and lightweight http router for nodejs",
+  "version": "2.0.6",
+  "description": "Fast and lightweight http routing engine for nodejs",
   "main": "index.cjs",
   "type": "module",
   "exports": {
