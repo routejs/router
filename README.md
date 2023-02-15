@@ -1,4 +1,6 @@
-[![Routejs Logo](https://raw.githubusercontent.com/routejs/docs/main/routejs.jpg)](https://github.com/routejs/router)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/routejs/docs/main/routejs.jpg" width="400px" alt="Routejs Logo">
+</p>
 
 [![NPM Version][npm-version-image]][npm-url]
 [![NPM Install Size][npm-install-size-image]][npm-install-size-url]
@@ -9,11 +11,12 @@ Routejs is a fast and lightweight http routing engine for [Node.js](http://nodej
 ## Features
 
 - Fast and lightweight
-- Named routing
 - Group routing
 - Host based routing
+- Named routing
 - Middleware support
 - Object and array based routing
+- Regular expression support
 
 ## Installation
 
