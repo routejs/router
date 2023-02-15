@@ -2,7 +2,7 @@
   "name": "@routejs/router",
   "version": "2.0.5",
   "description": "Fast and lightweight http router for nodejs",
-  "main": "index.js",
+  "main": "index.cjs",
   "type": "module",
   "exports": {
     "types": "./index.d.ts",
@@ -32,6 +32,7 @@
   ],
   "author": "Rajkumar Dusad",
   "license": "MIT",
+  "types": "./index.d.ts",
   "bugs": {
     "url": "https://github.com/routejs/router/issues"
   },
