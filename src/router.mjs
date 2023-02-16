@@ -141,7 +141,7 @@ export default class Router {
   group(path, callback) {
     if (!(typeof path === "string" || path instanceof String)) {
       throw new TypeError(
-        "Error: group path accepts only string as an argument"
+        "Error: group function path accepts only string as an argument"
       );
     }
 
@@ -157,7 +157,7 @@ export default class Router {
   domain(host, callback) {
     if (!(typeof host === "string" || host instanceof String)) {
       throw new TypeError(
-        "Error: domain host accepts only string as an argument"
+        "Error: domain function host accepts only string as an argument"
       );
     }
 
@@ -176,7 +176,7 @@ export default class Router {
       this.#route.setName(name);
     } else {
       throw new TypeError(
-        "Error: setName can not set name for middleware"
+        "Error: setName function can not set name for middleware"
       );
     }
     return this;
