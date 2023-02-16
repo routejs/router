@@ -1,6 +1,6 @@
 const supportedMethod = require("./supported-method.cjs");
 
-class Route {
+module.exports = class Route {
   host = null;
   hostRegexp = null;
   method = null;
@@ -181,8 +181,13 @@ class Route {
     try {
       let regexp = host
         ? host
+            // Esacep regex special char except inside {}
+            .replace(/[.*+?^${}()|[\]\\](?![^{]*})/g, "\\$&")
+            .replace(/\\}/g, "}")
+            // Add user defined regex
             .replace(/\{([^\}]+)\:/g, "")
             .replace(/\)\}/g, ")")
+            // Named regex
             .replace(/\{(.*?)\}/g, "(?:([^.]+?))")
         : "";
       if (this.caseSensitive === true) {
@@ -198,10 +203,16 @@ class Route {
     try {
       let regexp = path
         ? path
+            // Esacep regex special char except inside {}
+            .replace(/[.*+?^${}()|[\]\\](?![^{]*})/g, "\\$&")
+            .replace(/\\}/g, "}")
+            // Ignore trailing slashes
             .replace(/^\/?|\/?$/g, "/?")
             .replace(/\/\?\/\?/, "/?")
+            // Add user defined regex
             .replace(/\{([^\}]+)\:/g, "")
             .replace(/\)\}/g, ")")
+            // Named regex
             .replace(/\{(.*?)\}/g, "(?:([^/]+?))")
         : "";
       if (this.caseSensitive === true) {
@@ -217,10 +228,16 @@ class Route {
     try {
       let regexp = path
         ? path
+            // Esacep regex special char except inside {}
+            .replace(/[.*+?^${}()|[\]\\](?![^{]*})/g, "\\$&")
+            .replace(/\\}/g, "}")
+            // Ignore trailing slashes
             .replace(/^\/?|\/?$/g, "/?")
             .replace(/\/\?\/\?/, "/?")
+            // Add user defined regex
             .replace(/\{([^\}]+)\:/g, "")
             .replace(/\)\}/g, ")")
+            // Named regex
             .replace(/\{(.*?)\}/g, "(?:([^/]+?))")
         : "";
       if (this.caseSensitive === true) {
@@ -239,6 +256,4 @@ class Route {
     }
     return params.map((e) => e.replace(/\:\((.*)?/, ""));
   }
-}
-
-module.exports = Route;
+};

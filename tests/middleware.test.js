@@ -6,18 +6,18 @@ describe("Middleware test", () => {
   const blog = new Router();
   const group = new Router();
 
-  app.use(function (req, res, next) {
-    next();
-  });
-
-  app.use(
-    function (req, res, next) {
+  app
+    .use(function (req, res, next) {
       next();
-    },
-    function (req, res, next) {
-      next();
-    }
-  );
+    })
+    .use(
+      function (req, res, next) {
+        next();
+      },
+      function (req, res, next) {
+        next();
+      }
+    );
 
   app.use(
     "/multiple",

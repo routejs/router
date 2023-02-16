@@ -3,7 +3,7 @@ const url = require("node:url");
 const Route = require("./route.cjs");
 const supportedMethod = require("./supported-method.cjs");
 
-class Router {
+module.exports = class Router {
   #routes = [];
   #config = {
     caseSensitive: false,
@@ -133,7 +133,7 @@ class Router {
         callbacks: callbacks.slice(1),
       });
     } else {
-      this.#mergeRoute({ callbacks: callbacks });
+      return this.#mergeRoute({ callbacks: callbacks });
     }
   }
 
@@ -147,9 +147,9 @@ class Router {
     if (typeof callback === "function") {
       const router = new Router();
       callback(router);
-      this.#mergeRoute({ group: path, callbacks: router });
+      return this.#mergeRoute({ group: path, callbacks: router });
     } else {
-      this.#mergeRoute({ group: path, callbacks: callback });
+      return this.#mergeRoute({ group: path, callbacks: callback });
     }
   }
 
@@ -163,9 +163,9 @@ class Router {
     if (typeof callback === "function") {
       const router = new Router();
       callback(router);
-      this.#mergeRoute({ host, callbacks: router });
+      return this.#mergeRoute({ host, callbacks: router });
     } else {
-      this.#mergeRoute({ host, callbacks: callback });
+      return this.#mergeRoute({ host, callbacks: callback });
     }
   }
 
@@ -208,7 +208,12 @@ class Router {
       caseSensitive: this.#config.caseSensitive,
     });
     this.#routes.push(route);
-    return route;
+    // Set route name
+    this.setName = function (name) {
+      route.setName(name);
+      return this;
+    };
+    return this;
   }
 
   #mergeRoute({ host, method, group, callbacks }) {
@@ -239,7 +244,9 @@ class Router {
                 : null
               : route.path,
             callbacks: route.callbacks,
-            group: group ? nodePath.join(group, route.group ?? "") : route.group,
+            group: group
+              ? nodePath.join(group, route.group ?? "")
+              : route.group,
             name: route.name,
           });
         } else if (Array.isArray(route) || route instanceof Router) {
@@ -252,6 +259,11 @@ class Router {
     } else {
       this.#setRoute({ host, method, group, callbacks });
     }
+    // Set name is not allowed on middleware
+    if (this.setName) {
+      delete this.setName;
+    }
+    return this;
   }
 
   handle({ requestHost, requestMethod, requestUrl, request, response }) {
@@ -391,6 +403,4 @@ class Router {
     }
     return requestHandler.bind(this);
   }
-}
-
-module.exports = Router;
+};

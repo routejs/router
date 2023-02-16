@@ -1,57 +1,33 @@
 const request = require("supertest");
-const { Router } = require("../index.cjs");
+const { Router, path, use } = require("../index.cjs");
 
 describe("Routing test", () => {
   const app = new Router();
 
-  app
-    .use(function (req, res, next) {
-      next();
-    })
-    .get("/", function (req, res) {
-      res.end("GET");
-    })
-    .get("/", function (req, res) {
-      res.end("Ok");
-    });
+  const urls = [
+    use((req, res, next) => next()),
+    path("get", "/", (req, res) => res.end("GET")),
+    path("get", "/", (req, res) => res.end("Ok")),
+    path("post", "/", (req, res) => res.end("POST")),
+    path("put", "/", (req, res) => res.end("PUT")),
+    path("delete", "/", (req, res) => res.end("DELETE")),
+    path(["get", "post"], "/any", (req, res) =>
+      res.end(req.method.toUpperCase())
+    ).setName("any"),
+    path("get", "{name}/dashboard", (req, res) => res.end(req.params.name)),
+    path("get", "/params/{name:([A-Za-z]+)}/{id}", (req, res) =>
+      res.end(`${req.params.name},${req.params.id}`)
+    ).setName("params"),
+    path("get", "/digit/{id:(\\d+)}", (req, res) =>
+      res.end(req.params.id)
+    ).setName("digit"),
+    path("get", "/params/{name}.{ext}/size/{size:(\\d+)}", (req, res) =>
+      res.end(`${req.params.name}.${req.params.ext}.${req.params.size}`)
+    ),
+    use((req, res) => res.writeHead(404).end("Page Not Found")),
+  ];
 
-  app.post("/", function (req, res) {
-    res.end("POST");
-  });
-
-  app.put("/", function (req, res) {
-    res.end("PUT");
-  });
-
-  app.delete("/", function (req, res) {
-    res.end("DELETE");
-  });
-
-  app
-    .any(["get", "post"], "/any", function (req, res) {
-      res.end(req.method.toUpperCase());
-    })
-    .setName("any");
-
-  app
-    .get("{name}/dashboard", function (req, res) {
-      res.end(req.params.name);
-    })
-    .get("/params/{name:([A-Za-z]+)}/{id}", function (req, res) {
-      res.end(`${req.params.name},${req.params.id}`);
-    })
-    .setName("params")
-    .get("/digit/{id:(\\d+)}", function (req, res) {
-      res.end(req.params.id);
-    })
-    .setName("digit")
-    .get("/params/{name}.{ext}/size/{size:(\\d+)}", function (req, res) {
-      res.end(`${req.params.name}.${req.params.ext}.${req.params.size}`);
-    });
-
-  app.use(function (req, res) {
-    res.writeHead(404).end("Page Not Found");
-  });
+  app.use(urls);
 
   test("GET /", async () => {
     await request(app.handler())

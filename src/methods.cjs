@@ -3,7 +3,7 @@ const Route = require("./route.cjs");
 const Router = require("./router.cjs");
 const supportedMethod = require("./supported-method.cjs");
 
-module.exports = function use(...callbacks) {
+module.exports.use = function use(...callbacks) {
   if (typeof callbacks[0] === "string" || callbacks[0] instanceof String) {
     if (callbacks.length < 2) {
       throw new TypeError(
@@ -19,15 +19,15 @@ module.exports = function use(...callbacks) {
   }
 };
 
-module.exports = function path(method, path, ...callbacks) {
+module.exports.path = function path(method, path, ...callbacks) {
   return setRoute({ method, path, callbacks });
 };
 
-module.exports = function all(path, ...callbacks) {
+module.exports.all = function all(path, ...callbacks) {
   return setRoute({ method: supportedMethod, path, callbacks });
 };
 
-module.exports = function domain(host, routes) {
+module.exports.domain = function domain(host, routes) {
   if (!(typeof host === "string" || host instanceof String)) {
     throw new TypeError("Error: group host accepts only string as an argument");
   }
