@@ -9,6 +9,7 @@ export default class Router {
     caseSensitive: false,
     host: undefined,
   };
+  #route = null;
 
   constructor(options = {}) {
     if (options.caseSensitive === true) {
@@ -169,6 +170,18 @@ export default class Router {
     }
   }
 
+  setName(name) {
+    // Set route name
+    if (this.#route instanceof Route) {
+      this.#route.setName(name);
+    } else {
+      throw new TypeError(
+        "Error: setName function can not set name for middleware"
+      );
+    }
+    return this;
+  }
+
   routes() {
     return this.#routes;
   }
@@ -208,11 +221,7 @@ export default class Router {
       caseSensitive: this.#config.caseSensitive,
     });
     this.#routes.push(route);
-    // Set route name
-    this.setName = function (name) {
-      route.setName(name);
-      return this;
-    };
+    this.#route = route;
     return this;
   }
 
@@ -260,8 +269,8 @@ export default class Router {
       this.#setRoute({ host, method, group, callbacks });
     }
     // Set name is not allowed on middleware
-    if (this.setName) {
-      delete this.setName;
+    if (this.#route) {
+      this.#route = null;
     }
     return this;
   }
