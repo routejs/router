@@ -29,7 +29,7 @@ module.exports.all = function all(path, ...callbacks) {
 
 module.exports.domain = function domain(host, routes) {
   if (!(typeof host === "string" || host instanceof String)) {
-    throw new TypeError("Error: group host accepts only string as an argument");
+    throw new TypeError("Error: domain function host accepts only string as an argument");
   }
 
   if (typeof routes === "function") {
