@@ -63,8 +63,8 @@ export declare class Router {
   any(methods: string | string[], path: string, ...callbacks: any[]): this;
   all(path: string, ...callbacks: any[]): this;
   use(...callbacks: any): this;
-  group(path: string, callback: any[]): this;
-  domain(host: string, callback: any[]): this;
+  group(path: string, callback: any): this;
+  domain(host: string, callback: any): this;
   setName(name: string): this;
   routes(): Route[];
   route(name: string, params: any[]): string | null;
@@ -78,7 +78,7 @@ export declare class Router {
   handler(): handler;
 }
 
-export declare function use(...callbacks: any): Route;
+export declare function use(...callbacks: any): Route[];
 
 export declare function path(
   method: string | string[],
@@ -88,4 +88,4 @@ export declare function path(
 
 export declare function all(path: string, ...callbacks: any[]): Route;
 
-export declare function domain(host: string, routes: any): Route;
+export declare function domain(host: string, routes: any): Route[];
