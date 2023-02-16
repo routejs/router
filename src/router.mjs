@@ -157,7 +157,7 @@ export default class Router {
   domain(host, callback) {
     if (!(typeof host === "string" || host instanceof String)) {
       throw new TypeError(
-        "Error: group host accepts only string as an argument"
+        "Error: domain host accepts only string as an argument"
       );
     }
 
@@ -176,7 +176,7 @@ export default class Router {
       this.#route.setName(name);
     } else {
       throw new TypeError(
-        "Error: setName function can not set name for middleware"
+        "Error: setName can not set name for middleware"
       );
     }
     return this;
@@ -200,7 +200,7 @@ export default class Router {
         namedRoute.params.length !== params.length
       ) {
         throw new TypeError(
-          "Error: invalid route parameters, please provide array of route parameters"
+          "Error: invalid route parameters, please provide all route parameters"
         );
       }
       for (const param of params) {
