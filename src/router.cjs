@@ -141,7 +141,7 @@ module.exports = class Router {
   group(path, callback) {
     if (!(typeof path === "string" || path instanceof String)) {
       throw new TypeError(
-        "Error: group path accepts only string as an argument"
+        "Error: group function path accepts only string as an argument"
       );
     }
 
@@ -157,7 +157,7 @@ module.exports = class Router {
   domain(host, callback) {
     if (!(typeof host === "string" || host instanceof String)) {
       throw new TypeError(
-        "Error: group host accepts only string as an argument"
+        "Error: domain function host accepts only string as an argument"
       );
     }
 
@@ -200,7 +200,7 @@ module.exports = class Router {
         namedRoute.params.length !== params.length
       ) {
         throw new TypeError(
-          "Error: invalid route parameters, please provide array of route parameters"
+          "Error: invalid route parameters, please provide all route parameters"
         );
       }
       for (const param of params) {
