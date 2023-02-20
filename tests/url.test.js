@@ -9,6 +9,7 @@ describe("Routing test", () => {
     path("get", "/", (req, res) => res.end("GET")),
     path("get", "/", (req, res) => res.end("Ok")),
     path("post", "/", (req, res) => res.end("POST")),
+    path("put", "/", (req, res, next) => next()),
     path("put", "/", (req, res) => res.end("PUT")),
     path("delete", "/", (req, res) => res.end("DELETE")),
     path(["get", "post"], "/any", (req, res) =>
@@ -21,7 +22,7 @@ describe("Routing test", () => {
     path("get", "/digit/{id:(\\d+)}", (req, res) =>
       res.end(req.params.id)
     ).setName("digit"),
-    path("get", "/params/{name}.{ext}/size/{size:(\\d+)}", (req, res) =>
+    path("get", "params/{name}.{ext}/size/{size:(\\d+)}", (req, res) =>
       res.end(`${req.params.name}.${req.params.ext}.${req.params.size}`)
     ),
     use((req, res) => res.writeHead(404).end("Page Not Found")),

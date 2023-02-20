@@ -183,12 +183,11 @@ module.exports = class Route {
         ? host
             // Esacep regex special char except inside {}
             .replace(/[.*+?^${}()|[\]\\](?![^{]*})/g, "\\$&")
-            .replace(/\\}/g, "}")
             // Add user defined regex
-            .replace(/\{([^\}]+)\:/g, "")
-            .replace(/\)\}/g, ")")
+            .replace(/\{([^\\}]+)\:/g, "")
+            .replace(/\)\\}/g, ")")
             // Named regex
-            .replace(/\{(.*?)\}/g, "(?:([^.]+?))")
+            .replace(/\{(.*?)\\}/g, "(?:([^.]+?))")
         : "";
       if (this.caseSensitive === true) {
         return regexp ? new RegExp(`^${regexp}$`) : null;
@@ -205,20 +204,26 @@ module.exports = class Route {
         ? path
             // Esacep regex special char except inside {}
             .replace(/[.*+?^${}()|[\]\\](?![^{]*})/g, "\\$&")
-            .replace(/\\}/g, "}")
             // Ignore trailing slashes
-            .replace(/^\/?|\/?$/g, "/?")
-            .replace(/\/\?\/\?/, "/?")
+            .replace(/^\/?|\/?$/g, "")
             // Add user defined regex
-            .replace(/\{([^\}]+)\:/g, "")
-            .replace(/\)\}/g, ")")
+            .replace(/\{([^\\}]+)\:/g, "")
+            .replace(/\)\\}/g, ")")
             // Named regex
-            .replace(/\{(.*?)\}/g, "(?:([^/]+?))")
+            .replace(/\{(.*?)\\}/g, "(?:([^/]+?))")
         : "";
       if (this.caseSensitive === true) {
-        return regexp ? new RegExp(`^${regexp}$`) : null;
+        return regexp
+          ? new RegExp(`^/?${regexp}/?$`)
+          : regexp === ""
+          ? new RegExp(`^/?$`)
+          : null;
       }
-      return regexp ? new RegExp(`^${regexp}$`, "i") : null;
+      return regexp
+        ? new RegExp(`^/?${regexp}/?$`, "i")
+        : regexp === ""
+        ? new RegExp(`^/?$`, "i")
+        : null;
     } catch (err) {
       throw new TypeError(`Error: ${path} invalid regular expression`);
     }
@@ -230,20 +235,26 @@ module.exports = class Route {
         ? path
             // Esacep regex special char except inside {}
             .replace(/[.*+?^${}()|[\]\\](?![^{]*})/g, "\\$&")
-            .replace(/\\}/g, "}")
             // Ignore trailing slashes
-            .replace(/^\/?|\/?$/g, "/?")
-            .replace(/\/\?\/\?/, "/?")
+            .replace(/^\/?|\/?$/g, "")
             // Add user defined regex
-            .replace(/\{([^\}]+)\:/g, "")
-            .replace(/\)\}/g, ")")
+            .replace(/\{([^\\}]+)\:/g, "")
+            .replace(/\)\\}/g, ")")
             // Named regex
-            .replace(/\{(.*?)\}/g, "(?:([^/]+?))")
+            .replace(/\{(.*?)\\}/g, "(?:([^/]+?))")
         : "";
       if (this.caseSensitive === true) {
-        return regexp ? new RegExp(`^${regexp}(?=\/|$)`) : null;
+        return regexp
+          ? new RegExp(`^/?${regexp}/?(?=\/|$)`)
+          : regexp === ""
+          ? new RegExp(`^/?(?=\/|$)`)
+          : null;
       }
-      return regexp ? new RegExp(`^${regexp}(?=\/|$)`, "i") : null;
+      return regexp
+        ? new RegExp(`^/?${regexp}/?(?=\/|$)`, "i")
+        : regexp === ""
+        ? new RegExp(`^/?(?=\/|$)`, "i")
+        : null;
     } catch (err) {
       throw new TypeError(`Error: ${path} invalid regular expression`);
     }

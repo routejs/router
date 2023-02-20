@@ -29,7 +29,9 @@ export function all(path, ...callbacks) {
 
 export function domain(host, routes) {
   if (!(typeof host === "string" || host instanceof String)) {
-    throw new TypeError("Error: domain function host accepts only string as an argument");
+    throw new TypeError(
+      "Error: domain host accepts only string as an argument"
+    );
   }
 
   if (typeof routes === "function") {

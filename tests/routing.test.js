@@ -19,9 +19,13 @@ describe("Routing test", () => {
     res.end("POST");
   });
 
-  app.put("/", function (req, res) {
-    res.end("PUT");
-  });
+  app
+    .put("/", function (req, res, next) {
+      next();
+    })
+    .put("/", function (req, res) {
+      res.end("PUT");
+    });
 
   app.delete("/", function (req, res) {
     res.end("DELETE");
@@ -45,7 +49,7 @@ describe("Routing test", () => {
       res.end(req.params.id);
     })
     .setName("digit")
-    .get("/params/{name}.{ext}/size/{size:(\\d+)}", function (req, res) {
+    .get("params/{name}.{ext}/size/{size:(\\d+)}", function (req, res) {
       res.end(`${req.params.name}.${req.params.ext}.${req.params.size}`);
     });
 
