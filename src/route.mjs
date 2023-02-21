@@ -187,7 +187,7 @@ export default class Route {
             .replace(/\{([^\\}]+)\:/g, "")
             .replace(/\)\\}/g, ")")
             // Named regex
-            .replace(/\{(.*?)\\}/g, "(?:([^.]+?))")
+            .replace(/\{(.*?)\\}/g, "([^.]+?)")
         : "";
       if (this.caseSensitive === true) {
         return regexp ? new RegExp(`^${regexp}$`) : null;
@@ -210,19 +210,19 @@ export default class Route {
             .replace(/\{([^\\}]+)\:/g, "")
             .replace(/\)\\}/g, ")")
             // Named regex
-            .replace(/\{(.*?)\\}/g, "(?:([^/]+?))")
+            .replace(/\{(.*?)\\}/g, "([^/]+?)")
         : "";
       if (this.caseSensitive === true) {
         return regexp
           ? new RegExp(`^/?${regexp}/?$`)
           : regexp === ""
-          ? new RegExp(`^/?$`)
+          ? new RegExp("^/?$")
           : null;
       }
       return regexp
         ? new RegExp(`^/?${regexp}/?$`, "i")
         : regexp === ""
-        ? new RegExp(`^/?$`, "i")
+        ? new RegExp("^/?$", "i")
         : null;
     } catch (err) {
       throw new TypeError(`Error: ${path} invalid regular expression`);
@@ -241,19 +241,19 @@ export default class Route {
             .replace(/\{([^\\}]+)\:/g, "")
             .replace(/\)\\}/g, ")")
             // Named regex
-            .replace(/\{(.*?)\\}/g, "(?:([^/]+?))")
+            .replace(/\{(.*?)\\}/g, "([^/]+?)")
         : "";
       if (this.caseSensitive === true) {
         return regexp
           ? new RegExp(`^/?${regexp}/?(?=\/|$)`)
           : regexp === ""
-          ? new RegExp(`^/?(?=\/|$)`)
+          ? new RegExp("^/?(?=\/|$)")
           : null;
       }
       return regexp
         ? new RegExp(`^/?${regexp}/?(?=\/|$)`, "i")
         : regexp === ""
-        ? new RegExp(`^/?(?=\/|$)`, "i")
+        ? new RegExp("^/?(?=\/|$)", "i")
         : null;
     } catch (err) {
       throw new TypeError(`Error: ${path} invalid regular expression`);
