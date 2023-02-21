@@ -247,13 +247,13 @@ export default class Route {
         return regexp
           ? new RegExp(`^/?${regexp}/?(?=\/|$)`)
           : regexp === ""
-          ? new RegExp("^/?(?=\/|$)")
+          ? new RegExp("^/?(?=/|$)")
           : null;
       }
       return regexp
         ? new RegExp(`^/?${regexp}/?(?=\/|$)`, "i")
         : regexp === ""
-        ? new RegExp("^/?(?=\/|$)", "i")
+        ? new RegExp("^/?(?=/|$)", "i")
         : null;
     } catch (err) {
       throw new TypeError(`Error: ${path} invalid regular expression`);

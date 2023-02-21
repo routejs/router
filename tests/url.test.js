@@ -16,6 +16,9 @@ describe("Routing test", () => {
       res.end(req.method.toUpperCase())
     ).setName("any"),
     path("get", "{name}/dashboard", (req, res) => res.end(req.params.name)),
+    path("get", "/user/{name}/dashboard", (req, res) =>
+      res.end(req.params.name)
+    ),
     path("get", "/params/{name:([A-Za-z]+)}/{id}", (req, res) =>
       res.end(`${req.params.name},${req.params.id}`)
     ).setName("params"),
@@ -90,6 +93,15 @@ describe("Routing test", () => {
       .expect(200)
       .then((res) => {
         expect(res.text).toBe("user");
+      });
+  });
+
+  test("GET /user/abc/dashboard", async () => {
+    await request(app.handler())
+      .get("/user/abc/dashboard")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("abc");
       });
   });
 

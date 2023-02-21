@@ -41,6 +41,9 @@ describe("Routing test", () => {
     .get("{name}/dashboard", function (req, res) {
       res.end(req.params.name);
     })
+    .get("/user/{name}/dashboard", function (req, res) {
+      res.end(req.params.name);
+    })
     .get("/params/{name:([A-Za-z]+)}/{id}", function (req, res) {
       res.end(`${req.params.name},${req.params.id}`);
     })
@@ -117,6 +120,15 @@ describe("Routing test", () => {
       .expect(200)
       .then((res) => {
         expect(res.text).toBe("user");
+      });
+  });
+
+  test("GET /user/abc/dashboard", async () => {
+    await request(app.handler())
+      .get("/user/abc/dashboard")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("abc");
       });
   });
 
