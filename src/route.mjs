@@ -14,13 +14,13 @@ export default class Route {
   caseSensitive = false;
 
   constructor({ host, method, path, name, group, callbacks, caseSensitive }) {
-    if (!!host && !(typeof host === "string" || host instanceof String)) {
+    if (host && !(typeof host === "string" || host instanceof String)) {
       throw new TypeError(
         "Error: route host accepts only string as an argument"
       );
     }
 
-    if (!!method) {
+    if (method) {
       if (Array.isArray(method)) {
         method = method.map((e) => {
           if (!(typeof e === "string" || e instanceof String)) {
@@ -49,7 +49,7 @@ export default class Route {
       }
     }
 
-    if (!!path && !(typeof path === "string" || path instanceof String)) {
+    if (path && !(typeof path === "string" || path instanceof String)) {
       throw new TypeError(
         "Error: route path accepts only string as an argument"
       );
@@ -80,7 +80,7 @@ export default class Route {
           if (typeof callback !== "function") {
             throw new TypeError(
               `Error: ${
-                !!path ? "route" : "middleware"
+                path ? "route" : "middleware"
               } callback accepts only function as an argument`
             );
           }
@@ -95,7 +95,7 @@ export default class Route {
   }
 
   match({ host, method, path }) {
-    if (!!host && !(typeof host === "string" || host instanceof String)) {
+    if (host && !(typeof host === "string" || host instanceof String)) {
       throw new TypeError(
         "Error: request host accepts only string as an argument"
       );
@@ -134,7 +134,7 @@ export default class Route {
       subdomains: {},
     };
 
-    if (!!this.hostRegexp) {
+    if (this.hostRegexp) {
       const match = this.hostRegexp.exec(host);
       if (match === null) {
         return false;
@@ -150,7 +150,7 @@ export default class Route {
       }
     }
 
-    if (!!this.method) {
+    if (this.method) {
       if (Array.isArray(this.method)) {
         if (!this.method.includes(method.toUpperCase())) {
           return false;

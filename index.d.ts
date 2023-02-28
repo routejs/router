@@ -29,13 +29,8 @@ declare interface Route {
 
 declare type handler = (req: any, res: any) => void;
 
-interface RouterOptions {
-  caseSensitive?: boolean;
-  host?: string;
-}
-
 export declare class Router {
-  constructor(options?: RouterOptions);
+  constructor(options?: { caseSensitive?: boolean; host?: string });
   checkout(path: string, ...callbacks: any[]): this;
   copy(path: string, ...callbacks: any[]): this;
   delete(path: string, ...callbacks: any[]): this;

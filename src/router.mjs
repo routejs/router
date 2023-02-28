@@ -192,7 +192,7 @@ export default class Router {
       }
     });
     let routePath = namedRoute && namedRoute.path;
-    if (!!namedRoute.params) {
+    if (namedRoute.params) {
       if (
         !Array.isArray(params) ||
         namedRoute.params.length !== params.length
