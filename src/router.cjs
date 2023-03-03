@@ -1,7 +1,6 @@
 const nodePath = require("node:path");
 const url = require("node:url");
 const Route = require("./route.cjs");
-const supportedMethod = require("./supported-method.cjs");
 
 module.exports = class Router {
   #routes = [];
@@ -119,7 +118,11 @@ module.exports = class Router {
   }
 
   all(path, ...callbacks) {
-    return this.#setRoute({ method: supportedMethod, path, callbacks });
+    return this.#setRoute({ path, callbacks });
+  }
+
+  add(method, path, ...callbacks) {
+    return this.#setRoute({ method, path, callbacks });
   }
 
   use(...callbacks) {
@@ -275,7 +278,7 @@ module.exports = class Router {
 
   handle({ requestHost, requestMethod, requestUrl, request, response }) {
     const parsedUrl = url.parse(requestUrl ? requestUrl : "");
-    const requestPath = parsedUrl.pathname;
+    const requestPath = decodeURIComponent(parsedUrl.pathname);
     const callStack = {
       stack: this.routes(),
       index: 0,

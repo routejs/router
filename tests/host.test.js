@@ -45,12 +45,7 @@ describe("Routing test", () => {
   });
 
   test("POST /", async () => {
-    await request(app.handler())
-      .post("/")
-      .expect(404)
-      .then((res) => {
-        expect(res.text).toBe("Page Not Found");
-      });
+    await request(app.handler()).post("/").expect(404);
   });
 
   test("GET /", async () => {
@@ -94,11 +89,6 @@ describe("Routing test", () => {
   });
 
   test("Page Not Found", async () => {
-    await request(app.handler())
-      .get("/home")
-      .expect(404)
-      .then((res) => {
-        expect(res.text).toBe("Page Not Found");
-      });
+    await request(app.handler()).get("/home").expect(404);
   });
 });

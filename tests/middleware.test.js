@@ -65,6 +65,10 @@ describe("Middleware test", () => {
     throw new Error("Ok");
   });
 
+  app.use(function (req, res) {
+    res.writeHead(404).end("Page Not Found");
+  });
+
   app.use(function (err, req, res, next) {
     res.end(err.message);
   });
@@ -130,5 +134,9 @@ describe("Middleware test", () => {
       .then((res) => {
         expect(res.text).toBe("user");
       });
+  });
+
+  test("Page Not Found", async () => {
+    await request(app.handler()).get("/").expect(404);
   });
 });

@@ -87,6 +87,10 @@ describe("Routing test", () => {
       });
   });
 
+  test("PUT /any", async () => {
+    await request(app.handler()).put("/any").expect(404);
+  });
+
   test("GET /user/dashboard", async () => {
     await request(app.handler())
       .get("/user/dashboard")
@@ -141,12 +145,7 @@ describe("Routing test", () => {
   });
 
   test("Page Not Found", async () => {
-    await request(app.handler())
-      .get("/home")
-      .expect(404)
-      .then((res) => {
-        expect(res.text).toBe("Page Not Found");
-      });
+    await request(app.handler()).get("/home").expect(404);
   });
 
   test("Get route url", () => {

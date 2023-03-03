@@ -1,7 +1,6 @@
 import nodePath from "node:path";
 import Route from "./route.mjs";
 import Router from "./router.mjs";
-import supportedMethod from "./supported-method.mjs";
 
 export function use(...callbacks) {
   if (typeof callbacks[0] === "string" || callbacks[0] instanceof String) {
@@ -24,7 +23,7 @@ export function path(method, path, ...callbacks) {
 }
 
 export function all(path, ...callbacks) {
-  return setRoute({ method: supportedMethod, path, callbacks });
+  return setRoute({ path, callbacks });
 }
 
 export function domain(host, routes) {

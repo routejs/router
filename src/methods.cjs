@@ -1,7 +1,6 @@
 const nodePath = require("node:path");
 const Route = require("./route.cjs");
 const Router = require("./router.cjs");
-const supportedMethod = require("./supported-method.cjs");
 
 module.exports.use = function use(...callbacks) {
   if (typeof callbacks[0] === "string" || callbacks[0] instanceof String) {
@@ -24,7 +23,7 @@ module.exports.path = function path(method, path, ...callbacks) {
 };
 
 module.exports.all = function all(path, ...callbacks) {
-  return setRoute({ method: supportedMethod, path, callbacks });
+  return setRoute({ path, callbacks });
 };
 
 module.exports.domain = function domain(host, routes) {

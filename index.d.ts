@@ -56,6 +56,7 @@ export declare class Router {
   unsubscribe(path: string, ...callbacks: any[]): this;
   view(path: string, ...callbacks: any[]): this;
   any(methods: string | string[], path: string, ...callbacks: any[]): this;
+  add(method: string, path: string, ...callbacks: any[]): this;
   all(path: string, ...callbacks: any[]): this;
   use(...callbacks: any): this;
   group(path: string, callback: any): this;

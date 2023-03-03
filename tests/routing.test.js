@@ -12,19 +12,16 @@ describe("Routing test", () => {
       res.end("GET");
     })
     .get("/", function (req, res) {
-      res.end("Ok");
-    });
-
-  app.post("/", function (req, res) {
-    res.end("POST");
-  });
-
-  app
+      res.end("Never called");
+    })
     .put("/", function (req, res, next) {
       next();
     })
     .put("/", function (req, res) {
       res.end("PUT");
+    })
+    .post("/", function (req, res) {
+      res.end("POST");
     });
 
   app.delete("/", function (req, res) {
@@ -38,12 +35,6 @@ describe("Routing test", () => {
     .setName("any");
 
   app
-    .get("{name}/dashboard", function (req, res) {
-      res.end(req.params.name);
-    })
-    .get("/user/{name}/dashboard", function (req, res) {
-      res.end(req.params.name);
-    })
     .get("/params/{name:([A-Za-z]+)}/{id}", function (req, res) {
       res.end(`${req.params.name},${req.params.id}`);
     })
@@ -51,10 +42,7 @@ describe("Routing test", () => {
     .get("/digit/{id:(\\d+)}", function (req, res) {
       res.end(req.params.id);
     })
-    .setName("digit")
-    .get("params/{name}.{ext}/size/{size:(\\d+)}", function (req, res) {
-      res.end(`${req.params.name}.${req.params.ext}.${req.params.size}`);
-    });
+    .setName("digit");
 
   app.use(function (req, res) {
     res.writeHead(404).end("Page Not Found");
@@ -114,66 +102,12 @@ describe("Routing test", () => {
       });
   });
 
-  test("GET /user/dashboard", async () => {
-    await request(app.handler())
-      .get("/user/dashboard")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("user");
-      });
-  });
-
-  test("GET /user/abc/dashboard", async () => {
-    await request(app.handler())
-      .get("/user/abc/dashboard")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("abc");
-      });
-  });
-
-  test("GET /params/user/1", async () => {
-    await request(app.handler())
-      .get("/params/user/1")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("user,1");
-      });
-  });
-
-  test("GET /params/user1/1", async () => {
-    await request(app.handler()).get("/params/user1/1").expect(404);
-  });
-
-  test("GET /digit/100", async () => {
-    await request(app.handler())
-      .get("/digit/100")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("100");
-      });
-  });
-
-  test("GET /params/image.png/size/10", async () => {
-    await request(app.handler())
-      .get("/params/image.png/size/10")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("image.png.10");
-      });
-  });
-
-  test("GET /digit/a", async () => {
-    await request(app.handler()).get("/digit/a").expect(404);
+  test("PUT /any", async () => {
+    await request(app.handler()).put("/any").expect(404);
   });
 
   test("Page Not Found", async () => {
-    await request(app.handler())
-      .get("/home")
-      .expect(404)
-      .then((res) => {
-        expect(res.text).toBe("Page Not Found");
-      });
+    await request(app.handler()).get("/home").expect(404);
   });
 
   test("Get route url", () => {

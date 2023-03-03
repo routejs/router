@@ -1,7 +1,6 @@
 import nodePath from "node:path";
 import url from "node:url";
 import Route from "./route.mjs";
-import supportedMethod from "./supported-method.mjs";
 
 export default class Router {
   #routes = [];
@@ -119,7 +118,11 @@ export default class Router {
   }
 
   all(path, ...callbacks) {
-    return this.#setRoute({ method: supportedMethod, path, callbacks });
+    return this.#setRoute({ path, callbacks });
+  }
+
+  add(method, path, ...callbacks) {
+    return this.#setRoute({ method, path, callbacks });
   }
 
   use(...callbacks) {
@@ -275,7 +278,7 @@ export default class Router {
 
   handle({ requestHost, requestMethod, requestUrl, request, response }) {
     const parsedUrl = url.parse(requestUrl ? requestUrl : "");
-    const requestPath = parsedUrl.pathname;
+    const requestPath = decodeURIComponent(parsedUrl.pathname);
     const callStack = {
       stack: this.routes(),
       index: 0,

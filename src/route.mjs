@@ -1,5 +1,3 @@
-import supportedMethod from "./supported-method.mjs";
-
 export default class Route {
   host = null;
   hostRegexp = null;
@@ -28,19 +26,9 @@ export default class Route {
               "Error: route method accepts only string or array of string as an argument"
             );
           }
-          if (!supportedMethod.includes(e.toUpperCase())) {
-            throw new TypeError(
-              `Error: ${e.toUpperCase()} method is not supported`
-            );
-          }
           return e.toUpperCase();
         });
       } else if (typeof method === "string" || method instanceof String) {
-        if (!supportedMethod.includes(method.toUpperCase())) {
-          throw new TypeError(
-            `Error: ${method.toUpperCase()} method is not supported`
-          );
-        }
         method = method.toUpperCase();
       } else {
         throw new TypeError(
@@ -73,15 +61,17 @@ export default class Route {
       : this.#compileMiddlewareRegExp("/");
     this.group = group;
     this.name = name;
-    this.params = path ? this.#getParams(path) : this.#getParams(group);
-    this.subdomains = this.#getParams(host);
+    this.params = path
+      ? this.#getRouteParams(path)
+      : this.#getRouteParams(group);
+    this.subdomains = this.#getHostParams(host);
     this.callbacks = Array.isArray(callbacks)
       ? callbacks.map((callback) => {
           if (typeof callback !== "function") {
             throw new TypeError(
-              `Error: ${
-                path ? "route" : "middleware"
-              } callback accepts only function as an argument`
+              "Error: " +
+                (path ? "route" : "middleware") +
+                " callback accepts only function as an argument"
             );
           }
           return callback;
@@ -140,12 +130,10 @@ export default class Route {
         return false;
       }
       if (match.length > 1) {
-        let index = 0;
         for (let i = 1; i < match.length ?? 0; i++) {
-          if (this.subdomains && this.subdomains.hasOwnProperty(index)) {
-            route.subdomains[this.subdomains[index]] = match[i];
+          if (this.subdomains && this.subdomains.hasOwnProperty(i - 1)) {
+            route.subdomains[this.subdomains[i - 1]] = match[i];
           }
-          index++;
         }
       }
     }
@@ -166,12 +154,10 @@ export default class Route {
     }
 
     if (match.length > 1) {
-      let index = 0;
       for (let i = 1; i < match.length ?? 0; i++) {
-        if (this.params && this.params.hasOwnProperty(index)) {
-          route.params[this.params[index]] = match[i];
+        if (this.params && this.params.hasOwnProperty(i - 1)) {
+          route.params[this.params[i - 1]] = match[i];
         }
-        index++;
       }
     }
     return route;
@@ -181,87 +167,96 @@ export default class Route {
     try {
       let regexp = host
         ? host
-            // Esacep regex special char except inside {}
-            .replace(/[.*+?^${}()|[\]\\](?![^{]*})/g, "\\$&")
+            // Esacep regex special char except inside {} and ()
+            .replace(/(?<!\\)[.^$|[\]](?![^{(]*(\}|\)))/g, "\\$&")
+            .replace(/(?<!\\)[\*](?![^{(]*(\}|\)))/g, "(?:.*)")
+            // Ignore trailing slashes
+            .replace(/^\/?|\/?$/g, "")
             // Add user defined regex
-            .replace(/\{([^\\}]+)\:/g, "")
-            .replace(/\)\\}/g, ")")
+            .replace(/(?<=((?<!(\\))\{[^\/\(\{]+?)\:([^\)\}]+))\)\}/g, ")")
+            .replace(/(?<!\\)\{([^\/\{\}\(\)]+)\:(?=(.*)\))/g, "")
             // Named regex
-            .replace(/\{(.*?)\\}/g, "([^.]+?)")
+            .replace(/(?<!\\)\{([^/]+?)(?<!\\)\}/g, "([^.]+?)")
         : "";
       if (this.caseSensitive === true) {
-        return regexp ? new RegExp(`^${regexp}$`) : null;
+        return regexp ? new RegExp("^" + regexp + "$") : null;
       }
-      return regexp ? new RegExp(`^${regexp}$`, "i") : null;
+      return regexp ? new RegExp("^" + regexp + "$", "i") : null;
     } catch (err) {
-      throw new TypeError(`Error: ${host} invalid regular expression`);
+      throw new TypeError("Error: " + host + " invalid regular expression");
     }
   }
 
   #compileRouteRegExp(path) {
     try {
-      let regexp = path
-        ? path
-            // Esacep regex special char except inside {}
-            .replace(/[.*+?^${}()|[\]\\](?![^{]*})/g, "\\$&")
-            // Ignore trailing slashes
-            .replace(/^\/?|\/?$/g, "")
-            // Add user defined regex
-            .replace(/\{([^\\}]+)\:/g, "")
-            .replace(/\)\\}/g, ")")
-            // Named regex
-            .replace(/\{(.*?)\\}/g, "([^/]+?)")
-        : "";
+      let regexp = this.#compileRegExp(path);
       if (this.caseSensitive === true) {
         return regexp
-          ? new RegExp(`^/?${regexp}/?$`)
+          ? new RegExp("^/?" + regexp + "/?$")
           : regexp === ""
           ? new RegExp("^/?$")
           : null;
       }
       return regexp
-        ? new RegExp(`^/?${regexp}/?$`, "i")
+        ? new RegExp("^/?" + regexp + "/?$", "i")
         : regexp === ""
         ? new RegExp("^/?$", "i")
         : null;
     } catch (err) {
-      throw new TypeError(`Error: ${path} invalid regular expression`);
+      throw new TypeError("Error: " + path + " invalid regular expression");
     }
   }
 
   #compileMiddlewareRegExp(path) {
     try {
-      let regexp = path
-        ? path
-            // Esacep regex special char except inside {}
-            .replace(/[.*+?^${}()|[\]\\](?![^{]*})/g, "\\$&")
-            // Ignore trailing slashes
-            .replace(/^\/?|\/?$/g, "")
-            // Add user defined regex
-            .replace(/\{([^\\}]+)\:/g, "")
-            .replace(/\)\\}/g, ")")
-            // Named regex
-            .replace(/\{(.*?)\\}/g, "([^/]+?)")
-        : "";
+      let regexp = this.#compileRegExp(path);
       if (this.caseSensitive === true) {
         return regexp
-          ? new RegExp(`^/?${regexp}/?(?=\/|$)`)
+          ? new RegExp("^/?" + regexp + "/?(?=/|$)")
           : regexp === ""
           ? new RegExp("^/?(?=/|$)")
           : null;
       }
       return regexp
-        ? new RegExp(`^/?${regexp}/?(?=\/|$)`, "i")
+        ? new RegExp("^/?" + regexp + "/?(?=/|$)", "i")
         : regexp === ""
         ? new RegExp("^/?(?=/|$)", "i")
         : null;
     } catch (err) {
-      throw new TypeError(`Error: ${path} invalid regular expression`);
+      throw new TypeError("Error: " + path + " invalid regular expression");
     }
   }
 
-  #getParams(path) {
-    let params = path ? path.match(/(?<=\{).+?(?=\})/g) : null;
+  #compileRegExp(path) {
+    try {
+      return path
+        ? path
+            // Esacep regex special char except inside {} and ()
+            .replace(/(?<!\\)[.^$|[\]](?![^{(]*(\}|\)))/g, "\\$&")
+            .replace(/(?<!\\)[\*](?![^{(]*(\}|\)))/g, "(?:.*)")
+            // Ignore trailing slashes
+            .replace(/^\/?|\/?$/g, "")
+            // Add user defined regex
+            .replace(/(?<=((?<!(\\))\{[^\/\(\{]+?)\:([^\)\}]+))\)\}/g, ")")
+            .replace(/(?<!\\)\{([^\/\{\}\(\)]+)\:(?=(.*)\))/g, "")
+            // Named regex
+            .replace(/(?<!\\)\{([^/]+?)(?<!\\)\}/g, "([^/]+?)")
+        : "";
+    } catch (err) {
+      throw new TypeError("Error: " + path + " invalid regular expression");
+    }
+  }
+
+  #getRouteParams(path) {
+    let params = path ? path.match(/(?<=\{)([^/]+?)(?=\})/g) : null;
+    if (!params) {
+      return undefined;
+    }
+    return params.map((e) => e.replace(/\:\((.*)?/, ""));
+  }
+
+  #getHostParams(path) {
+    let params = path ? path.match(/(?<=\{)([^.]+?)(?=\})/g) : null;
     if (!params) {
       return undefined;
     }
