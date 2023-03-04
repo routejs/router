@@ -49,22 +49,23 @@ module.exports = class Route {
       );
     }
 
-    this.caseSensitive = caseSensitive ?? false;
-    this.host = host;
-    this.hostRegexp = host ? this.#compileHostRegExp(host) : undefined;
-    this.method = method;
-    this.path = path;
-    this.pathRegexp = path
+    let hostRegexp = host ? this.#compileHostRegExp(host) : {};
+    let pathRegexp = path
       ? this.#compileRouteRegExp(path)
       : group
       ? this.#compileMiddlewareRegExp(group)
       : this.#compileMiddlewareRegExp("/");
+
+    this.caseSensitive = caseSensitive ?? false;
+    this.host = host;
+    this.hostRegexp = hostRegexp?.regexp;
+    this.method = method;
+    this.path = path;
+    this.pathRegexp = pathRegexp?.regexp;
     this.group = group;
     this.name = name;
-    this.params = path
-      ? this.#getRouteParams(path)
-      : this.#getRouteParams(group);
-    this.subdomains = this.#getHostParams(host);
+    this.params = pathRegexp?.params;
+    this.subdomains = hostRegexp?.params;
     this.callbacks = Array.isArray(callbacks)
       ? callbacks.map((callback) => {
           if (typeof callback !== "function") {
@@ -165,23 +166,13 @@ module.exports = class Route {
 
   #compileHostRegExp(host) {
     try {
-      let regexp = host
-        ? host
-            // Esacep regex special char except inside {} and ()
-            .replace(/(?<!\\)[.^$|[\]](?![^{(]*(\}|\)))/g, "\\$&")
-            .replace(/(?<!\\)[\*](?![^{(]*(\}|\)))/g, "(?:.*)")
-            // Ignore trailing slashes
-            .replace(/^\/?|\/?$/g, "")
-            // Add user defined regex
-            .replace(/(?<=((?<!(\\))\{[^\/\(\{]+?)\:([^\)\}]+))\)\}/g, ")")
-            .replace(/(?<!\\)\{([^\/\{\}\(\)]+)\:(?=(.*)\))/g, "")
-            // Named regex
-            .replace(/(?<!\\)\{([^/]+?)(?<!\\)\}/g, "([^.]+?)")
-        : "";
+      let { regexp, params } = this.#compileRegExp(host, ".");
       if (this.caseSensitive === true) {
-        return regexp ? new RegExp("^" + regexp + "$") : null;
+        regexp = regexp ? new RegExp("^" + regexp + "$") : null;
+      } else {
+        regexp = regexp ? new RegExp("^" + regexp + "$", "i") : null;
       }
-      return regexp ? new RegExp("^" + regexp + "$", "i") : null;
+      return { regexp, params };
     } catch (err) {
       throw new TypeError("Error: " + host + " invalid regular expression");
     }
@@ -189,19 +180,21 @@ module.exports = class Route {
 
   #compileRouteRegExp(path) {
     try {
-      let regexp = this.#compileRegExp(path);
+      let { regexp, params } = this.#compileRegExp(path);
       if (this.caseSensitive === true) {
-        return regexp
+        regexp = regexp
           ? new RegExp("^/?" + regexp + "/?$")
           : regexp === ""
           ? new RegExp("^/?$")
           : null;
+      } else {
+        regexp = regexp
+          ? new RegExp("^/?" + regexp + "/?$", "i")
+          : regexp === ""
+          ? new RegExp("^/?$", "i")
+          : null;
       }
-      return regexp
-        ? new RegExp("^/?" + regexp + "/?$", "i")
-        : regexp === ""
-        ? new RegExp("^/?$", "i")
-        : null;
+      return { regexp, params };
     } catch (err) {
       throw new TypeError("Error: " + path + " invalid regular expression");
     }
@@ -209,57 +202,61 @@ module.exports = class Route {
 
   #compileMiddlewareRegExp(path) {
     try {
-      let regexp = this.#compileRegExp(path);
+      let { regexp, params } = this.#compileRegExp(path);
       if (this.caseSensitive === true) {
-        return regexp
+        regexp = regexp
           ? new RegExp("^/?" + regexp + "/?(?=/|$)")
           : regexp === ""
           ? new RegExp("^/?(?=/|$)")
           : null;
+      } else {
+        regexp = regexp
+          ? new RegExp("^/?" + regexp + "/?(?=/|$)", "i")
+          : regexp === ""
+          ? new RegExp("^/?(?=/|$)", "i")
+          : null;
       }
-      return regexp
-        ? new RegExp("^/?" + regexp + "/?(?=/|$)", "i")
-        : regexp === ""
-        ? new RegExp("^/?(?=/|$)", "i")
-        : null;
+      return { regexp, params };
     } catch (err) {
       throw new TypeError("Error: " + path + " invalid regular expression");
     }
   }
 
-  #compileRegExp(path) {
+  #compileRegExp(path, delimiter = "/") {
     try {
-      return path
-        ? path
-            // Esacep regex special char except inside {} and ()
-            .replace(/(?<!\\)[.^$|[\]](?![^{(]*(\}|\)))/g, "\\$&")
-            .replace(/(?<!\\)[\*](?![^{(]*(\}|\)))/g, "(?:.*)")
-            // Ignore trailing slashes
-            .replace(/^\/?|\/?$/g, "")
-            // Add user defined regex
-            .replace(/(?<=((?<!(\\))\{[^\/\(\{]+?)\:([^\)\}]+))\)\}/g, ")")
-            .replace(/(?<!\\)\{([^\/\{\}\(\)]+)\:(?=(.*)\))/g, "")
-            // Named regex
-            .replace(/(?<!\\)\{([^/]+?)(?<!\\)\}/g, "([^/]+?)")
-        : "";
+      let regexp = [];
+      let params = [];
+      path.split(new RegExp("(?<!\\\\)\\" + delimiter)).forEach((e) => {
+        if (e === "") {
+          return;
+        }
+
+        let keys = e.match(/(?<=(?<!\\)\{)(([^\{]|\\{)+?)(?=(?<!\\)\})/g);
+        if (keys) {
+          keys.map((e) => {
+            params.push(e.replace(/\:\((.*)?/, ""));
+          });
+        }
+
+        e = e
+          // Esacep regexp special char except inside {} and ()
+          .replace(/(?<!\\)[.^$|[\]](?![^{(]*(\}|\)))/g, "\\$&")
+          .replace(/(?<!\\)[\*](?![^{(]*(\}|\)))/g, "(?:.*)")
+          // Add user defined regexp
+          .replace(/(?<!\\)\{(([^\{]|\\{)+?)\:(?=(.*)(?<!\\)\})/g, "")
+          .replace(/(?<=\))\}/g, "")
+          // Named regexp
+          .replace(
+            /(?<!\\)\{(([^\{]|\\{)+?)(?<!\\)\}/g,
+            "([^\\" + delimiter + "]+?)"
+          );
+
+        regexp.push(e);
+      });
+      return { regexp: regexp.join("\\" + delimiter), params: params };
     } catch (err) {
+      console.log(err);
       throw new TypeError("Error: " + path + " invalid regular expression");
     }
-  }
-
-  #getRouteParams(path) {
-    let params = path ? path.match(/(?<=\{)([^/]+?)(?=\})/g) : null;
-    if (!params) {
-      return undefined;
-    }
-    return params.map((e) => e.replace(/\:\((.*)?/, ""));
-  }
-
-  #getHostParams(path) {
-    let params = path ? path.match(/(?<=\{)([^.]+?)(?=\})/g) : null;
-    if (!params) {
-      return undefined;
-    }
-    return params.map((e) => e.replace(/\:\((.*)?/, ""));
   }
 };

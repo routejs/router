@@ -68,6 +68,13 @@ describe("Routing test", () => {
       });
   });
 
+  test("GET /ok", async () => {
+    await request(app.handler())
+      .get("/ok")
+      .set("Host", "test.www.localhost:3000")
+      .expect(404);
+  });
+
   test("GET /subdomain/params", async () => {
     await request(app.handler())
       .get("/subdomain/params")
