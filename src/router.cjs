@@ -9,6 +9,7 @@ module.exports = class Router {
     host: undefined,
   };
   #route = null;
+  #cache = {};
 
   constructor(options = {}) {
     if (options.caseSensitive === true) {
@@ -277,8 +278,15 @@ module.exports = class Router {
   }
 
   handle({ requestHost, requestMethod, requestUrl, request, response }) {
-    const parsedUrl = url.parse(requestUrl ? requestUrl : "");
-    const requestPath = decodeURIComponent(parsedUrl.pathname);
+    let requestPath;
+    if (this.#cache.hasOwnProperty(requestUrl)) {
+      requestPath = this.#cache[requestUrl];
+    } else {
+      const parsedUrl = url.parse(requestUrl ? requestUrl : "");
+      this.#cache[requestUrl] = decodeURI(parsedUrl.pathname);
+      requestPath = this.#cache[requestUrl];
+    }
+
     const callStack = {
       stack: this.routes(),
       index: 0,
