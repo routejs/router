@@ -9,13 +9,14 @@ export default class Router {
     host: undefined,
   };
   #route = null;
-  #cache = {};
+  #cache = null;
 
   constructor(options = {}) {
     if (options.caseSensitive === true) {
       this.#config.caseSensitive = true;
     }
     this.#config.host = options.host;
+    this.#cache = new Map();
   }
 
   checkout(path, ...callbacks) {
@@ -279,12 +280,15 @@ export default class Router {
 
   handle({ requestHost, requestMethod, requestUrl, request, response }) {
     let requestPath;
-    if (this.#cache.hasOwnProperty(requestUrl)) {
-      requestPath = this.#cache[requestUrl];
+    if (this.#cache.has(requestUrl)) {
+      requestPath = this.#cache.get(requestUrl);
+      if (this.#cache.size > 100) {
+        this.#cache.clear();
+      }
     } else {
       const parsedUrl = url.parse(requestUrl ? requestUrl : "");
-      this.#cache[requestUrl] = decodeURI(parsedUrl.pathname);
-      requestPath = this.#cache[requestUrl];
+      this.#cache.set(requestUrl, decodeURI(parsedUrl.pathname));
+      requestPath = this.#cache.get(requestUrl);
     }
 
     const callStack = {
