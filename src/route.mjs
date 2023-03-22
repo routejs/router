@@ -13,9 +13,7 @@ export default class Route {
 
   constructor({ host, method, path, name, group, callbacks, caseSensitive }) {
     if (host && !(typeof host === "string" || host instanceof String)) {
-      throw new TypeError(
-        "Error: route host accepts only string as an argument"
-      );
+      throw new TypeError("route host accepts only string as an argument");
     }
 
     if (method) {
@@ -23,7 +21,7 @@ export default class Route {
         method = method.map((e) => {
           if (!(typeof e === "string" || e instanceof String)) {
             throw new TypeError(
-              "Error: route method accepts only string or array of string as an argument"
+              "route method accepts only string or array of string as an argument"
             );
           }
           return e.toUpperCase();
@@ -32,20 +30,18 @@ export default class Route {
         method = method.toUpperCase();
       } else {
         throw new TypeError(
-          "Error: route method accepts only string or array of string as an argument"
+          "route method accepts only string or array of string as an argument"
         );
       }
     }
 
     if (path && !(typeof path === "string" || path instanceof String)) {
-      throw new TypeError(
-        "Error: route path accepts only string as an argument"
-      );
+      throw new TypeError("route path accepts only string as an argument");
     }
 
     if (Array.isArray(callbacks) === false && typeof callbacks !== "function") {
       throw new TypeError(
-        "Error: route callback accepts only function as an argument"
+        "route callback accepts only function as an argument"
       );
     }
 
@@ -70,7 +66,7 @@ export default class Route {
       ? callbacks.map((callback) => {
           if (typeof callback !== "function") {
             throw new TypeError(
-              "Error: " +
+              "" +
                 (path ? "route" : "middleware") +
                 " callback accepts only function as an argument"
             );
@@ -87,29 +83,23 @@ export default class Route {
 
   match({ host, method, path }) {
     if (host && !(typeof host === "string" || host instanceof String)) {
-      throw new TypeError(
-        "Error: request host accepts only string as an argument"
-      );
+      throw new TypeError("request host accepts only string as an argument");
     }
 
     if (!method) {
-      throw new TypeError("Error: request method is required");
+      throw new TypeError("request method is required");
     }
 
     if (!(typeof method === "string" || method instanceof String)) {
-      throw new TypeError(
-        "Error: request method accepts only string as an argument"
-      );
+      throw new TypeError("request method accepts only string as an argument");
     }
 
     if (!path) {
-      throw new TypeError("Error: request path is required");
+      throw new TypeError("request path is required");
     }
 
     if (!(typeof path === "string" || path instanceof String)) {
-      throw new TypeError(
-        "Error: request path accepts only string as an argument"
-      );
+      throw new TypeError("request path accepts only string as an argument");
     }
 
     if (this.pathRegexp === null) {
@@ -174,7 +164,7 @@ export default class Route {
       }
       return { regexp, params };
     } catch (err) {
-      throw new TypeError("Error: " + host + " invalid regular expression");
+      throw new TypeError("" + host + " invalid regular expression");
     }
   }
 
@@ -196,7 +186,7 @@ export default class Route {
       }
       return { regexp, params };
     } catch (err) {
-      throw new TypeError("Error: " + path + " invalid regular expression");
+      throw new TypeError("" + path + " invalid regular expression");
     }
   }
 
@@ -218,7 +208,7 @@ export default class Route {
       }
       return { regexp, params };
     } catch (err) {
-      throw new TypeError("Error: " + path + " invalid regular expression");
+      throw new TypeError("" + path + " invalid regular expression");
     }
   }
 
@@ -256,7 +246,7 @@ export default class Route {
       return { regexp: regexp.join("\\" + delimiter), params: params };
     } catch (err) {
       console.log(err);
-      throw new TypeError("Error: " + path + " invalid regular expression");
+      throw new TypeError("" + path + " invalid regular expression");
     }
   }
 }

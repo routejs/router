@@ -1,5 +1,6 @@
 import nodePath from "node:path";
 import url from "node:url";
+import LRUCache from "@opensnip/lrujs";
 import Route from "./route.mjs";
 
 export default class Router {
@@ -9,14 +10,16 @@ export default class Router {
     host: undefined,
   };
   #route = null;
-  #cache = null;
+  #pathCache = null;
+  #routeCache = null;
 
   constructor(options = {}) {
     if (options.caseSensitive === true) {
       this.#config.caseSensitive = true;
     }
     this.#config.host = options.host;
-    this.#cache = new Map();
+    this.#pathCache = new LRUCache();
+    this.#routeCache = new LRUCache();
   }
 
   checkout(path, ...callbacks) {
@@ -131,7 +134,7 @@ export default class Router {
     if (typeof callbacks[0] === "string" || callbacks[0] instanceof String) {
       if (callbacks.length < 2) {
         throw new TypeError(
-          "Error: use function callback accepts function or router as an argument"
+          "use function callback accepts function or router as an argument"
         );
       }
       return this.#mergeRoute({
@@ -145,9 +148,7 @@ export default class Router {
 
   group(path, callback) {
     if (!(typeof path === "string" || path instanceof String)) {
-      throw new TypeError(
-        "Error: group path accepts only string as an argument"
-      );
+      throw new TypeError("group path accepts only string as an argument");
     }
 
     if (typeof callback === "function") {
@@ -161,9 +162,7 @@ export default class Router {
 
   domain(host, callback) {
     if (!(typeof host === "string" || host instanceof String)) {
-      throw new TypeError(
-        "Error: domain host accepts only string as an argument"
-      );
+      throw new TypeError("domain host accepts only string as an argument");
     }
 
     if (typeof callback === "function") {
@@ -180,7 +179,7 @@ export default class Router {
     if (this.#route instanceof Route) {
       this.#route.setName(name);
     } else {
-      throw new TypeError("Error: setName can not set name for middleware");
+      throw new TypeError("setName can not set name for middleware");
     }
     return this;
   }
@@ -203,7 +202,7 @@ export default class Router {
         namedRoute.params.length !== params.length
       ) {
         throw new TypeError(
-          "Error: invalid route parameters, please provide all route parameters"
+          "invalid route parameters, please provide all route parameters"
         );
       }
       for (const param of params) {
@@ -279,16 +278,14 @@ export default class Router {
   }
 
   handle({ requestHost, requestMethod, requestUrl, request, response }) {
+    let that = this;
     let requestPath;
-    if (this.#cache.has(requestUrl)) {
-      requestPath = this.#cache.get(requestUrl);
-      if (this.#cache.size > 100) {
-        this.#cache.clear();
-      }
+    if (that.#pathCache.has(requestUrl)) {
+      requestPath = that.#pathCache.get(requestUrl);
     } else {
       const parsedUrl = url.parse(requestUrl ? requestUrl : "");
-      this.#cache.set(requestUrl, decodeURI(parsedUrl.pathname));
-      requestPath = this.#cache.get(requestUrl);
+      that.#pathCache.set(requestUrl, decodeURI(parsedUrl.pathname));
+      requestPath = that.#pathCache.get(requestUrl);
     }
 
     const callStack = {
@@ -302,12 +299,12 @@ export default class Router {
           // No more middlewares to execute
           // Execute next callstack
           callStack.index++;
-          return runCallStack(error);
+          return runCallback(error);
         }
 
         if (typeof callbacks.stack[callbacks.index] !== "function") {
           throw new TypeError(
-            "Error: callback argument only accepts function as an argument"
+            "callback argument only accepts function as an argument"
           );
         }
 
@@ -320,7 +317,7 @@ export default class Router {
               if (err === "skip") {
                 // Skip all middlewares of current callstack and execute next callstack
                 callStack.index++;
-                runCallStack();
+                runCallback();
               } else {
                 // Execute next middleware
                 callbacks.index++;
@@ -341,7 +338,7 @@ export default class Router {
               if (err === "skip") {
                 // Skip all middlewares of current callstack and execute next callstack
                 callStack.index++;
-                runCallStack();
+                runCallback();
               } else {
                 // Execute next middleware
                 callbacks.index++;
@@ -364,7 +361,7 @@ export default class Router {
       }
     }
 
-    function runCallStack(error = null) {
+    function runCallback(error = null) {
       if (typeof callStack.stack[callStack.index] === "undefined") {
         if (error !== null) {
           if (error instanceof Error) {
@@ -376,12 +373,24 @@ export default class Router {
         // Nothing to execute
         return;
       }
+
+      let match;
+      let cacheKey = `${callStack.index};${requestHost};${requestMethod};${requestUrl}`;
+      if (that.#routeCache.has(cacheKey)) {
+        match = that.#routeCache.get(cacheKey);
+      } else {
+        that.#routeCache.set(
+          cacheKey,
+          callStack.stack[callStack.index].match({
+            host: requestHost,
+            method: requestMethod,
+            path: requestPath,
+          })
+        );
+        match = that.#routeCache.get(cacheKey);
+      }
+
       // Execute callbacks
-      const match = callStack.stack[callStack.index].match({
-        host: requestHost,
-        method: requestMethod,
-        path: requestPath,
-      });
       if (match !== false) {
         request.params = match.params;
         request.subdomains = match.subdomains;
@@ -392,11 +401,11 @@ export default class Router {
         return runMiddleware(callbacks, error);
       } else {
         callStack.index++;
-        return runCallStack(error);
+        return runCallback(error);
       }
     }
 
-    runCallStack();
+    runCallback();
   }
 
   handler() {

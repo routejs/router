@@ -1,6 +1,6 @@
 {
   "name": "@routejs/router",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "description": "Fast and lightweight http routing engine for nodejs",
   "main": "index.mjs",
   "type": "module",
@@ -50,5 +50,8 @@
     "index.cjs",
     "index.mjs",
     "index.d.ts"
-  ]
+  ],
+  "dependencies": {
+    "@opensnip/lrujs": "^1.0.0"
+  }
 }

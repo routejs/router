@@ -6,7 +6,7 @@ module.exports.use = function use(...callbacks) {
   if (typeof callbacks[0] === "string" || callbacks[0] instanceof String) {
     if (callbacks.length < 2) {
       throw new TypeError(
-        "Error: use function callback accepts function or router as an argument"
+        "use function callback accepts function or router as an argument"
       );
     }
     return mergeRoute({
@@ -28,9 +28,7 @@ module.exports.all = function all(path, ...callbacks) {
 
 module.exports.domain = function domain(host, routes) {
   if (!(typeof host === "string" || host instanceof String)) {
-    throw new TypeError(
-      "Error: domain host accepts only string as an argument"
-    );
+    throw new TypeError("domain host accepts only string as an argument");
   }
 
   if (typeof routes === "function") {
