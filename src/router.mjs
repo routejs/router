@@ -18,8 +18,12 @@ export default class Router {
       this.#config.caseSensitive = true;
     }
     this.#config.host = options.host;
-    this.#pathCache = new LRUCache();
-    this.#routeCache = new LRUCache();
+    this.#pathCache = new LRUCache({
+      maxLength: 250,
+    });
+    this.#routeCache = new LRUCache({
+      maxLength: 250,
+    });
   }
 
   checkout(path, ...callbacks) {
