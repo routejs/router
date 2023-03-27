@@ -375,7 +375,7 @@ module.exports = class Router {
       }
 
       let match;
-      let cacheKey = `${callStack.index};${requestHost};${requestMethod};${requestUrl}`;
+      let cacheKey = callStack.index + ";" + requestHost + ";" + requestMethod + ";" + requestPath;
       if (that.#routeCache.has(cacheKey)) {
         match = that.#routeCache.get(cacheKey);
       } else {
