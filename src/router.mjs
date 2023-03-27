@@ -279,10 +279,8 @@ export default class Router {
 
   handle({ requestHost, requestMethod, requestUrl, request, response }) {
     let that = this;
-    let requestPath;
-    if (that.#pathCache.has(requestUrl)) {
-      requestPath = that.#pathCache.get(requestUrl);
-    } else {
+    let requestPath = that.#pathCache.get(requestUrl);
+    if (typeof requestPath === "undefined") {
       const parsedUrl = url.parse(requestUrl ? requestUrl : "");
       that.#pathCache.set(requestUrl, decodeURI(parsedUrl.pathname));
       requestPath = that.#pathCache.get(requestUrl);
@@ -374,11 +372,16 @@ export default class Router {
         return;
       }
 
-      let match;
-      let cacheKey = `${callStack.index};${requestHost};${requestMethod};${requestUrl}`;
-      if (that.#routeCache.has(cacheKey)) {
-        match = that.#routeCache.get(cacheKey);
-      } else {
+      let cacheKey =
+        callStack.index +
+        ";" +
+        requestHost +
+        ";" +
+        requestMethod +
+        ";" +
+        requestPath;
+      let match = that.#routeCache.get(cacheKey);
+      if (typeof match === "undefined") {
         that.#routeCache.set(
           cacheKey,
           callStack.stack[callStack.index].match({
@@ -391,7 +394,7 @@ export default class Router {
       }
 
       // Execute callbacks
-      if (match !== false) {
+      if (match && match !== false) {
         request.params = match.params;
         request.subdomains = match.subdomains;
         const callbacks = {
