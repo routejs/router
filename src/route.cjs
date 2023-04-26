@@ -1,3 +1,5 @@
+const LRUCache = require("@opensnip/lrujs");
+
 module.exports = class Route {
   host = null;
   hostRegexp = null;
@@ -10,6 +12,7 @@ module.exports = class Route {
   subdomains = null;
   callbacks = null;
   caseSensitive = false;
+  #regexCache = null;
 
   constructor({ host, method, path, name, group, callbacks, caseSensitive }) {
     if (host && !(typeof host === "string" || host instanceof String)) {
@@ -74,6 +77,9 @@ module.exports = class Route {
           return callback;
         })
       : [callbacks];
+    this.#regexCache = new LRUCache({
+      maxLength: 250,
+    });
   }
 
   setName(name) {
@@ -116,7 +122,11 @@ module.exports = class Route {
     };
 
     if (this.hostRegexp) {
-      const match = this.hostRegexp.exec(host);
+      let match = this.#regexCache.get("host:" + host);
+      if (typeof match === "undefined") {
+        match = this.hostRegexp.exec(host);
+        this.#regexCache.set("host:" + host, match);
+      }
       if (match === null) {
         return false;
       }
@@ -139,7 +149,11 @@ module.exports = class Route {
       }
     }
 
-    const match = this.pathRegexp.exec(path);
+    let match = this.#regexCache.get("path:" + path);
+    if (typeof match === "undefined") {
+      match = this.pathRegexp.exec(path);
+      this.#regexCache.set("path:" + path, match);
+    }
     if (match === null) {
       return false;
     }

@@ -11,7 +11,6 @@ export default class Router {
   };
   #route = null;
   #pathCache = null;
-  #routeCache = null;
 
   constructor(options = {}) {
     if (options.caseSensitive === true) {
@@ -19,9 +18,6 @@ export default class Router {
     }
     this.#config.host = options.host;
     this.#pathCache = new LRUCache({
-      maxLength: 250,
-    });
-    this.#routeCache = new LRUCache({
       maxLength: 250,
     });
   }
@@ -286,8 +282,8 @@ export default class Router {
     let requestPath = that.#pathCache.get(requestUrl);
     if (typeof requestPath === "undefined") {
       const parsedUrl = url.parse(requestUrl ? requestUrl : "");
-      that.#pathCache.set(requestUrl, decodeURI(parsedUrl.pathname));
-      requestPath = that.#pathCache.get(requestUrl);
+      requestPath = decodeURI(parsedUrl.pathname);
+      that.#pathCache.set(requestUrl, requestPath);
     }
 
     const callStack = {
@@ -376,29 +372,14 @@ export default class Router {
         return;
       }
 
-      let cacheKey =
-        callStack.index +
-        ";" +
-        requestHost +
-        ";" +
-        requestMethod +
-        ";" +
-        requestPath;
-      let match = that.#routeCache.get(cacheKey);
-      if (typeof match === "undefined") {
-        that.#routeCache.set(
-          cacheKey,
-          callStack.stack[callStack.index].match({
-            host: requestHost,
-            method: requestMethod,
-            path: requestPath,
-          })
-        );
-        match = that.#routeCache.get(cacheKey);
-      }
+      let match = callStack.stack[callStack.index].match({
+        host: requestHost,
+        method: requestMethod,
+        path: requestPath,
+      });
 
       // Execute callbacks
-      if (match && match !== false) {
+      if (match !== false) {
         request.params = match.params;
         request.subdomains = match.subdomains;
         const callbacks = {
