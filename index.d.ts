@@ -63,7 +63,7 @@ export declare class Router {
   domain(host: string, callback: any): this;
   setName(name: string): this;
   routes(): Route[];
-  route(name: string, params: any[]): string | null;
+  route(name: string, params?: object): string | null;
   handle(options: {
     requestHost: string;
     requestMethod: string;
