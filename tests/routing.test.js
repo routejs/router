@@ -35,11 +35,11 @@ describe("Routing test", () => {
     .setName("any");
 
   app
-    .get("/params/{name:([A-Za-z]+)}/{id}", function (req, res) {
+    .get("/params/:name([A-Za-z]+)/:id", function (req, res) {
       res.end(`${req.params.name},${req.params.id}`);
     })
     .setName("params")
-    .get("/digit/{id:(\\d+)}", function (req, res) {
+    .get("/digit/:id(\\d+)", function (req, res) {
       res.end(req.params.id);
     })
     .setName("digit");
@@ -111,11 +111,11 @@ describe("Routing test", () => {
   });
 
   test("Get route url", () => {
-    expect(app.route("params", ["abc", 10])).toBe("/params/abc/10");
+    expect(app.route("params", { name: "abc", id: 10 })).toBe("/params/abc/10");
   });
 
   test("Get route url", () => {
-    expect(app.route("digit", [10])).toBe("/digit/10");
+    expect(app.route("digit", { id: 10 })).toBe("/digit/10");
   });
 
   test("Get route url", () => {

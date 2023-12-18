@@ -15,7 +15,7 @@ describe("Routing test", () => {
       next();
     });
 
-  app.domain("{name}.localhost:3000", function (router) {
+  app.domain(":name.localhost", function (router) {
     router
       .get("/", function (req, res) {
         res.end("Never called");
@@ -51,7 +51,7 @@ describe("Routing test", () => {
   test("GET /", async () => {
     await request(app.handler())
       .get("/")
-      .set("Host", "www.localhost:3000")
+      .set("Host", "www.localhost")
       .expect(200)
       .then((res) => {
         expect(res.text).toBe("GET");
@@ -61,7 +61,7 @@ describe("Routing test", () => {
   test("GET /ok", async () => {
     await request(app.handler())
       .get("/ok")
-      .set("Host", "www.localhost:3000")
+      .set("Host", "www.localhost")
       .expect(200)
       .then((res) => {
         expect(res.text).toBe("Ok");
@@ -71,14 +71,14 @@ describe("Routing test", () => {
   test("GET /ok", async () => {
     await request(app.handler())
       .get("/ok")
-      .set("Host", "test.www.localhost:3000")
+      .set("Host", "test.www.localhost")
       .expect(404);
   });
 
   test("GET /subdomain/params", async () => {
     await request(app.handler())
       .get("/subdomain/params")
-      .set("Host", "www.localhost:3000")
+      .set("Host", "www.localhost")
       .expect(200)
       .then((res) => {
         expect(res.text).toBe("www");
@@ -88,7 +88,7 @@ describe("Routing test", () => {
   test("POST /", async () => {
     await request(app.handler())
       .post("/")
-      .set("Host", "www.localhost:3000")
+      .set("Host", "www.localhost")
       .expect(200)
       .then((res) => {
         expect(res.text).toBe("POST");

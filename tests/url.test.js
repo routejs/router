@@ -15,17 +15,17 @@ describe("Routing test", () => {
     path(["get", "post"], "/any", (req, res) =>
       res.end(req.method.toUpperCase())
     ).setName("any"),
-    path("get", "{name}/dashboard", (req, res) => res.end(req.params.name)),
-    path("get", "/user/{name}/dashboard", (req, res) =>
+    path("get", ":name/dashboard", (req, res) => res.end(req.params.name)),
+    path("get", "/user/:name/dashboard", (req, res) =>
       res.end(req.params.name)
     ),
-    path("get", "/params/{name:([A-Za-z]+)}/{id}", (req, res) =>
+    path("get", "/params/:name([A-Za-z]+)/:id", (req, res) =>
       res.end(`${req.params.name},${req.params.id}`)
     ).setName("params"),
-    path("get", "/digit/{id:(\\d+)}", (req, res) =>
+    path("get", "/digit/:id(\\d+)", (req, res) =>
       res.end(req.params.id)
     ).setName("digit"),
-    path("get", "params/{name}.{ext}/size/{size:(\\d+)}", (req, res) =>
+    path("get", "params/:name.:ext/size/:size(\\d+)", (req, res) =>
       res.end(`${req.params.name}.${req.params.ext}.${req.params.size}`)
     ),
     use((req, res) => res.writeHead(404).end("Page Not Found")),
@@ -149,11 +149,11 @@ describe("Routing test", () => {
   });
 
   test("Get route url", () => {
-    expect(app.route("params", ["abc", 10])).toBe("/params/abc/10");
+    expect(app.route("params", { name: "abc", id: 10 })).toBe("/params/abc/10");
   });
 
   test("Get route url", () => {
-    expect(app.route("digit", [10])).toBe("/digit/10");
+    expect(app.route("digit", { id: 10 })).toBe("/digit/10");
   });
 
   test("Get route url", () => {

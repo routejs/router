@@ -39,12 +39,12 @@ describe("Middleware test", () => {
     res.end();
   });
 
-  app.use("/params/{name}", function (req, res, next) {
+  app.use("/params/:name", function (req, res, next) {
     res.write(req.params.name);
     next();
   });
 
-  app.get("/params/{name}", function (req, res) {
+  app.get("/params/:name", function (req, res) {
     res.end();
   });
 
@@ -59,7 +59,7 @@ describe("Middleware test", () => {
     res.end(req.params.name);
   });
 
-  app.use("/group/{name}", group);
+  app.use("/group/:name", group);
 
   app.get("/error", function (req, res) {
     throw new Error("Ok");

@@ -195,21 +195,7 @@ export default class Router {
         namedRoute = route;
       }
     });
-    let routePath = namedRoute && namedRoute.path;
-    if (namedRoute.params) {
-      if (
-        !Array.isArray(params) ||
-        namedRoute.params.length !== params.length
-      ) {
-        throw new TypeError(
-          "invalid route parameters, please provide all route parameters"
-        );
-      }
-      for (const param of params) {
-        routePath = routePath.replace(/\{(.*?)\}/, param);
-      }
-    }
-    return routePath;
+    return namedRoute.compilePathRegexpToPath(params);
   }
 
   #setRoute({ host, method, path, callbacks, group, name }) {

@@ -5,16 +5,16 @@ describe("Route parameters test", () => {
   const app = new Router();
 
   app
-    .get("{name}/dashboard", function (req, res) {
+    .get(":name/dashboard", function (req, res) {
       res.end(req.params.name);
     })
-    .get("/user/{name}/dashboard", function (req, res) {
+    .get("/user/:name/dashboard", function (req, res) {
       res.end(req.params.name);
     })
-    .get("/params/{name}.{ext}/size/{size:(\\d+)}", function (req, res) {
+    .get("/params/:name.:ext/size/:size(\\d+)", function (req, res) {
       res.end(`${req.params.name}.${req.params.ext}.${req.params.size}`);
     })
-    .get("/digit/{id:(\\d+)}", function (req, res) {
+    .get("/digit/:id(\\d+)", function (req, res) {
       res.end(req.params.id);
     })
     .get("/all/*", function (req, res) {

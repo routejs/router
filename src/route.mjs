@@ -1,4 +1,6 @@
 import LRUCache from "@opensnip/lrujs";
+import hostRegex from "./host-regex.mjs";
+import pathRegex from "./path-regex.mjs";
 
 export default class Route {
   host = null;
@@ -6,6 +8,7 @@ export default class Route {
   method = null;
   path = null;
   pathRegexp = null;
+  compilePathRegexpToPath = null;
   group = null;
   name = null;
   params = null;
@@ -61,6 +64,7 @@ export default class Route {
     this.method = method;
     this.path = path;
     this.pathRegexp = pathRegexp?.regexp;
+    this.compilePathRegexpToPath = pathRegexp?.compile;
     this.group = group;
     this.name = name;
     this.params = pathRegexp?.params;
@@ -130,9 +134,9 @@ export default class Route {
       if (match === null) {
         return false;
       }
-      if (match.length > 1) {
+      if (match.length > 1 && this.subdomains.length > 0) {
         for (let i = 1; i < match.length ?? 0; i++) {
-          if (this.subdomains && this.subdomains.hasOwnProperty(i - 1)) {
+          if (this.subdomains.hasOwnProperty(i - 1)) {
             route.subdomains[this.subdomains[i - 1]] = match[i];
           }
         }
@@ -158,9 +162,9 @@ export default class Route {
       return false;
     }
 
-    if (match.length > 1) {
+    if (match.length > 1 && this.params.length > 0) {
       for (let i = 1; i < match.length ?? 0; i++) {
-        if (this.params && this.params.hasOwnProperty(i - 1)) {
+        if (this.params.hasOwnProperty(i - 1)) {
           route.params[this.params[i - 1]] = match[i];
         }
       }
@@ -170,13 +174,14 @@ export default class Route {
 
   #compileHostRegExp(host) {
     try {
-      let { regexp, params } = this.#compileRegExp(host, ".");
-      if (this.caseSensitive === true) {
-        regexp = regexp ? new RegExp("^" + regexp + "$") : null;
-      } else {
-        regexp = regexp ? new RegExp("^" + regexp + "$", "i") : null;
-      }
-      return { regexp, params };
+      let hostRegexp = hostRegex(host, {
+        caseSensitive: this.caseSensitive,
+      });
+      return {
+        regexp: hostRegexp.regex,
+        params: hostRegexp.params.map((e) => e.name),
+        compile: hostRegexp.compile,
+      };
     } catch (err) {
       throw new TypeError("" + host + " invalid regular expression");
     }
@@ -184,21 +189,14 @@ export default class Route {
 
   #compileRouteRegExp(path) {
     try {
-      let { regexp, params } = this.#compileRegExp(path);
-      if (this.caseSensitive === true) {
-        regexp = regexp
-          ? new RegExp("^/?" + regexp + "/?$")
-          : regexp === ""
-          ? new RegExp("^/?$")
-          : null;
-      } else {
-        regexp = regexp
-          ? new RegExp("^/?" + regexp + "/?$", "i")
-          : regexp === ""
-          ? new RegExp("^/?$", "i")
-          : null;
-      }
-      return { regexp, params };
+      let pathRegexp = pathRegex(path, {
+        caseSensitive: this.caseSensitive,
+      });
+      return {
+        regexp: pathRegexp.regex,
+        params: pathRegexp.params.map((e) => e.name),
+        compile: pathRegexp.compile,
+      };
     } catch (err) {
       throw new TypeError("" + path + " invalid regular expression");
     }
@@ -206,60 +204,18 @@ export default class Route {
 
   #compileMiddlewareRegExp(path) {
     try {
-      let { regexp, params } = this.#compileRegExp(path);
-      if (this.caseSensitive === true) {
-        regexp = regexp
-          ? new RegExp("^/?" + regexp + "/?(?=/|$)")
-          : regexp === ""
-          ? new RegExp("^/?(?=/|$)")
-          : null;
-      } else {
-        regexp = regexp
-          ? new RegExp("^/?" + regexp + "/?(?=/|$)", "i")
-          : regexp === ""
-          ? new RegExp("^/?(?=/|$)", "i")
-          : null;
-      }
-      return { regexp, params };
-    } catch (err) {
-      throw new TypeError("" + path + " invalid regular expression");
-    }
-  }
-
-  #compileRegExp(path, delimiter = "/") {
-    try {
-      let regexp = [];
-      let params = [];
-      path.split(new RegExp("(?<!\\\\)\\" + delimiter)).forEach((e) => {
-        if (e === "") {
-          return;
-        }
-
-        let keys = e.match(/(?<=(?<!\\)\{)(([^\{]|\\{)+?)(?=(?<!\\)\})/g);
-        if (keys) {
-          keys.map((e) => {
-            params.push(e.replace(/\:\((.*)?/, ""));
-          });
-        }
-
-        e = e
-          // Esacep regexp special char except inside {} and ()
-          .replace(/(?<!\\)[.^$|[\]](?![^{(]*(\}|\)))/g, "\\$&")
-          .replace(/(?<!\\)[\*](?![^{(]*(\}|\)))/g, "(?:.*)")
-          // Add user defined regexp
-          .replace(/(?<!\\)\{(([^\{]|\\{)+?)\:(?=(.*)(?<!\\)\})/g, "")
-          .replace(/(?<=\))\}/g, "")
-          // Named regexp
-          .replace(
-            /(?<!\\)\{(([^\{]|\\{)+?)(?<!\\)\}/g,
-            "([^\\" + delimiter + "]+?)"
-          );
-
-        regexp.push(e);
+      let pathRegexp = pathRegex(path, {
+        caseSensitive: this.caseSensitive,
       });
-      return { regexp: regexp.join("\\" + delimiter), params: params };
+      let regexp = new RegExp(
+        pathRegexp.regex.source.replace(/(\$$)/gm, "(?=/|$)")
+      );
+      return {
+        regexp,
+        params: pathRegexp.params.map((e) => e.name),
+        compile: pathRegexp.compile,
+      };
     } catch (err) {
-      console.log(err);
       throw new TypeError("" + path + " invalid regular expression");
     }
   }
