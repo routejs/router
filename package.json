@@ -1,6 +1,6 @@
 {
   "name": "@routejs/router",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Fast and lightweight http routing engine for nodejs",
   "main": "index.mjs",
   "type": "module",

@@ -1,162 +1,391 @@
 const request = require("supertest");
 const { Router } = require("../index.cjs");
 
-describe("Route parameters test", () => {
-  const app = new Router();
-
-  app
-    .get(":name/dashboard", function (req, res) {
+describe("Route params test", () => {
+  test("GET /:name", async () => {
+    const app = new Router();
+    app.get("/:name", function (req, res) {
       res.end(req.params.name);
-    })
-    .get("/user/:name/dashboard", function (req, res) {
-      res.end(req.params.name);
-    })
-    .get("/params/:name.:ext/size/:size(\\d+)", function (req, res) {
-      res.end(`${req.params.name}.${req.params.ext}.${req.params.size}`);
-    })
-    .get("/digit/:id(\\d+)", function (req, res) {
-      res.end(req.params.id);
-    })
-    .get("/all/*", function (req, res) {
-      res.end("Ok");
-    })
-    .get("/any/ab+", function (req, res) {
-      res.end("Ok");
-    })
-    .get("/optional/ab?", function (req, res) {
-      res.end("Ok");
-    })
-    .get("/regex/([A-Za-z]+)", function (req, res) {
-      res.end("Ok");
-    })
-    .get("/special/^a?c|d$.e*/end", function (req, res) {
-      res.end("Ok");
     });
 
-  app.use(function (req, res) {
-    res.writeHead(404).end("Page Not Found");
-  });
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
 
-  test("GET /user/dashboard", async () => {
     await request(app.handler())
-      .get("/user/dashboard")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("user");
-      });
-  });
-
-  test("GET /user/abc/dashboard", async () => {
-    await request(app.handler())
-      .get("/user/abc/dashboard")
+      .get("/abc")
       .expect(200)
       .then((res) => {
         expect(res.text).toBe("abc");
       });
   });
 
-  test("GET /params/image.png/size/10", async () => {
+  test("GET /:name/*", async () => {
+    const app = new Router();
+    app.get("/:name/*", function (req, res) {
+      res.end(req.params.name);
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
     await request(app.handler())
-      .get("/params/image.png/size/10")
+      .get("/abc/xyz/testing")
       .expect(200)
       .then((res) => {
-        expect(res.text).toBe("image.png.10");
+        expect(res.text).toBe("abc");
       });
   });
 
-  test("GET /digit/100", async () => {
+  test("GET /abc?", async () => {
+    const app = new Router();
+    app.get("/abc?", function (req, res) {
+      res.end("Ok");
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/ab").expect(200);
+  });
+
+  test("GET /abc?", async () => {
+    const app = new Router();
+    app.get("/abc?", function (req, res) {
+      res.end("Ok");
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/abc").expect(200);
+  });
+
+  test("GET /abc?", async () => {
+    const app = new Router();
+    app.get("/abc?", function (req, res) {
+      res.end("Ok");
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/abcd").expect(404);
+  });
+
+  test("GET /abc?d", async () => {
+    const app = new Router();
+    app.get("/abc?d", function (req, res) {
+      res.end("Ok");
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/abd").expect(200);
+  });
+
+  test("GET /abc?d", async () => {
+    const app = new Router();
+    app.get("/abc?d", function (req, res) {
+      res.end("Ok");
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/abcd").expect(200);
+  });
+
+  test("GET /abc+", async () => {
+    const app = new Router();
+    app.get("/abc+", function (req, res) {
+      res.end("Ok");
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/abc").expect(200);
+  });
+
+  test("GET /abc+", async () => {
+    const app = new Router();
+    app.get("/abc+", function (req, res) {
+      res.end("Ok");
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/abcc").expect(200);
+  });
+
+  test("GET /abc+", async () => {
+    const app = new Router();
+    app.get("/abc+", function (req, res) {
+      res.end("Ok");
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/ab").expect(404);
+  });
+
+  test("GET /abc+d", async () => {
+    const app = new Router();
+    app.get("/abc+d", function (req, res) {
+      res.end("Ok");
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/abcd").expect(200);
+  });
+
+  test("GET /abc+d", async () => {
+    const app = new Router();
+    app.get("/abc+d", function (req, res) {
+      res.end("Ok");
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/abccccd").expect(200);
+  });
+
+  test("GET /abc+d", async () => {
+    const app = new Router();
+    app.get("/abc+d", function (req, res) {
+      res.end("Ok");
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/abcccced").expect(404);
+  });
+
+  test("GET /abc+d", async () => {
+    const app = new Router();
+    app.get("/abc+d", function (req, res) {
+      res.end("Ok");
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/abd").expect(404);
+  });
+
+  test("GET /blog/*", async () => {
+    const app = new Router();
+    app.get("/blog/*", function (req, res) {
+      res.end("Ok");
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/blog").expect(404);
+  });
+
+  test("GET /blog/*", async () => {
+    const app = new Router();
+    app.get("/blog/*", function (req, res) {
+      res.end("Ok");
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/blog/category/slug").expect(200);
+  });
+
+  test("GET /blog/:id(\\d+)", async () => {
+    const app = new Router();
+    app.get("/blog/:id(\\d+)", function (req, res) {
+      res.end(req.params.id);
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
     await request(app.handler())
-      .get("/digit/100")
+      .get("/blog/12345")
       .expect(200)
       .then((res) => {
-        expect(res.text).toBe("100");
+        expect(res.text).toBe("12345");
       });
   });
 
-  test("GET /digit/a", async () => {
-    await request(app.handler()).get("/digit/a").expect(404);
+  test("GET /blog/:id(\\d+)", async () => {
+    const app = new Router();
+    app.get("/blog/:id(\\d+)", function (req, res) {
+      res.end(req.params.id);
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/blog").expect(404);
   });
 
-  test("GET /all/*", async () => {
+  test("GET /blog/:id(\\d+)", async () => {
+    const app = new Router();
+    app.get("/blog/:id(\\d+)", function (req, res) {
+      res.end(req.params.id);
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/blog/12345a").expect(404);
+  });
+
+  test("GET /blog/(\\d+)", async () => {
+    const app = new Router();
+    app.get("/blog/(\\d+)", function (req, res) {
+      res.end(req.params[0]);
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
     await request(app.handler())
-      .get("/all/a/b/c/d")
+      .get("/blog/12345")
       .expect(200)
       .then((res) => {
-        expect(res.text).toBe("Ok");
+        expect(res.text).toBe("12345");
       });
   });
 
-  test("GET /any/ab+", async () => {
+  test("GET /blog/(\\d+)", async () => {
+    const app = new Router();
+    app.get("/blog/(\\d+)", function (req, res) {
+      res.end(req.params[0]);
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/blog/").expect(404);
+  });
+
+  test("GET /blog/(\\d+)", async () => {
+    const app = new Router();
+    app.get("/blog/(\\d+)", function (req, res) {
+      res.end(req.params[0]);
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/blog/12345a").expect(404);
+  });
+
+  test("GET /image/:name.:ext", async () => {
+    const app = new Router();
+    app.get("/image/:name.:ext", function (req, res) {
+      res.end(`${req.params.name}.${req.params.ext}`);
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
     await request(app.handler())
-      .get("/any/ab")
+      .get("/image/cat.png")
       .expect(200)
       .then((res) => {
-        expect(res.text).toBe("Ok");
+        expect(res.text).toBe("cat.png");
       });
   });
 
-  test("GET /any/ab+", async () => {
+  test("Param count /image/:name.:ext/(\\d+)/:id(\\d+)", async () => {
+    const app = new Router();
+    app.get("/image/:name.:ext/(\\d+)/:id(\\d+)", function (req, res) {
+      res.end(`${Object.keys(req.params).length}`);
+    });
+
     await request(app.handler())
-      .get("/any/abbb")
+      .get("/image/cat.png/0/1")
       .expect(200)
       .then((res) => {
-        expect(res.text).toBe("Ok");
+        expect(res.text).toBe("4");
       });
   });
 
-  test("GET /any/ab+", async () => {
-    await request(app.handler()).get("/any/abc").expect(404);
+  test("GET /\\(\\)|{}[]<>.:;\\+\\*", async () => {
+    const app = new Router();
+    app.get("/\\(\\)|{}[]<>.:;\\+\\*", function (req, res) {
+      res.end(req.params[0]);
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler()).get("/()|{}[]<>.:;+*").expect(200);
   });
 
-  test("GET /optional/ab?", async () => {
-    await request(app.handler())
-      .get("/optional/a")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("Ok");
+  test("Invalid regex /(?:(\\d+))", async () => {
+    expect(function () {
+      const app = new Router();
+      app.get("/(?:(\\d+))", function (req, res) {
+        res.end("Ok");
       });
+    }).toThrow(TypeError);
   });
 
-  test("GET /optional/ab?", async () => {
-    await request(app.handler())
-      .get("/optional/ab")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("Ok");
+  test("Invalid regex /([A-Z]+(?:(\\d+)))", async () => {
+    expect(function () {
+      const app = new Router();
+      app.get("/([A-Z]+(?:(\\d+)))", function (req, res) {
+        res.end("Ok");
       });
+    }).toThrow(TypeError);
   });
 
-  test("GET /optional/ab?", async () => {
-    await request(app.handler()).get("/optional/abc").expect(404);
-  });
-
-  test("GET /regex/([A-Za-z]+)", async () => {
-    await request(app.handler())
-      .get("/regex/abc")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("Ok");
+  test("Invalid regex /([A-Z]+(\\d+))", async () => {
+    expect(function () {
+      const app = new Router();
+      app.get("/([A-Z]+(\\d+))", function (req, res) {
+        res.end("Ok");
       });
+    }).toThrow(TypeError);
   });
 
-  test("GET /regex/([A-Za-z]+)", async () => {
-    await request(app.handler()).get("/regex/abc/10").expect(404);
-  });
-
-  test("GET /regex/([A-Za-z]+)", async () => {
-    await request(app.handler()).get("/regex/ab10").expect(404);
-  });
-
-  test("GET /special", async () => {
-    await request(app.handler())
-      .get("/special/^ac|d$.ea/end")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("Ok");
+  test("Invalid regex /:name/*/(\\d+\\)", async () => {
+    expect(function () {
+      const app = new Router();
+      app.get("/:name/*/(\\d+\\)", function (req, res) {
+        res.end("Ok");
       });
-  });
-
-  test("Page Not Found", async () => {
-    await request(app.handler()).get("/home").expect(404);
+    }).toThrow(TypeError);
   });
 });

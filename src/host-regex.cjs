@@ -4,7 +4,7 @@ module.exports = function hostRegex(host, options = { caseSensitive: false }) {
   let param = {};
   let isEscape = false;
   let caseSensitive = options?.caseSensitive ?? false;
-  for (let i in host) {
+  for (let i = 0; i < host.length; i++) {
     let char = host[i];
     // Match escape character
     if (host[i] === "\\" && isEscape === false) {
@@ -38,7 +38,7 @@ module.exports = function hostRegex(host, options = { caseSensitive: false }) {
           }
           param = {};
         }
-        param.nameStart = +i;
+        param.nameStart = i;
         param.hasParamName = true;
       } else if (param.hasParamRegex !== true && host[i].match(/^[\.]$/i)) {
         if (param.hasParamName === true) {
@@ -54,21 +54,29 @@ module.exports = function hostRegex(host, options = { caseSensitive: false }) {
         param = {};
       } else if (host[i].match(/^[^A-Za-z0-9_]+$/i)) {
         if (host[i] === "(") {
+          if (host[i + 1] === "?") {
+            if (host[i + 2] == ":") {
+              throw new TypeError(
+                `non-capturing groups are not allowed at ${i}`
+              );
+            }
+            throw new TypeError(`pattern cannot start with "?" at ${i}`);
+          }
           if (param.hasParamRegex === true) {
-            throw new TypeError(`Capturing groups are not allowed at ${i}`);
+            throw new TypeError(`capturing groups are not allowed at ${i}`);
           }
           if (param.hasParamName === true && param.nameStart !== i - 1) {
             param.hasParamRegex = true;
-            param.regexStart = +i;
+            param.regexStart = i;
             param.nameEnd = i - 1;
           } else {
             param = {};
             param.hasParamName = false;
             param.hasParamRegex = true;
-            param.regexStart = +i;
+            param.regexStart = i;
           }
         } else if (param.hasParamRegex === true && host[i] === ")") {
-          param.regexEnd = +i;
+          param.regexEnd = i;
           if (param.regexStart !== param.regexEnd) {
             params.push(param);
           }
@@ -77,8 +85,8 @@ module.exports = function hostRegex(host, options = { caseSensitive: false }) {
           param = {};
           param.hasParamName = false;
           param.hasParamRegex = true;
-          param.regexStart = +i;
-          param.regexEnd = +i;
+          param.regexStart = i;
+          param.regexEnd = i;
           params.push(param);
           param = {};
         } else if (param.hasParamRegex !== true) {
@@ -101,10 +109,10 @@ module.exports = function hostRegex(host, options = { caseSensitive: false }) {
         param.hasParamRegex === true &&
         typeof param.regexEnd === "undefined"
       ) {
-        throw new TypeError(`Unterminated group at ${i}`);
+        throw new TypeError(`unterminated group at ${i}`);
       }
       if (param.hasParamName === true) {
-        param.nameEnd = +i;
+        param.nameEnd = i;
         param.hasParamRegex = param.hasParamRegex === true;
         if (param.nameStart !== param.nameEnd) {
           params.push(param);
@@ -160,6 +168,7 @@ module.exports = function hostRegex(host, options = { caseSensitive: false }) {
   let regex =
     caseSensitive === true ? new RegExp(pathRegex, "i") : new RegExp(pathRegex);
 
+  // Compiler regex to path
   function compile(params = {}, options = {}) {
     let tmpPath = regex.source;
     let validate = options?.validate ?? false;
@@ -185,7 +194,7 @@ module.exports = function hostRegex(host, options = { caseSensitive: false }) {
 
     let isEscape = false;
     let compiledPath = "";
-    for (let i in tmpPath) {
+    for (let i = 0; i < tmpPath.length; i++) {
       let char = tmpPath[i];
       // Match escape character
       if (tmpPath[i] === "\\" && isEscape === false) {

@@ -265,6 +265,14 @@ export default class Router {
 
   handle({ requestHost, requestMethod, requestUrl, request, response }) {
     let that = this;
+    if (requestHost) {
+      let host = that.#pathCache.get(requestHost);
+      if (typeof host === "undefined") {
+        host = requestHost.replace(/\:.*$/g, "");
+        that.#pathCache.set(requestHost, host);
+      }
+      requestHost = host;
+    }
     let requestPath = that.#pathCache.get(requestUrl);
     if (typeof requestPath === "undefined") {
       const parsedUrl = url.parse(requestUrl ? requestUrl : "");
@@ -283,7 +291,7 @@ export default class Router {
           // No more middlewares to execute
           // Execute next callstack
           callStack.index++;
-          return runCallback(error);
+          return runCallStack(error);
         }
 
         if (typeof callbacks.stack[callbacks.index] !== "function") {
@@ -301,7 +309,7 @@ export default class Router {
               if (err === "skip") {
                 // Skip all middlewares of current callstack and execute next callstack
                 callStack.index++;
-                runCallback();
+                runCallStack();
               } else {
                 // Execute next middleware
                 callbacks.index++;
@@ -322,7 +330,7 @@ export default class Router {
               if (err === "skip") {
                 // Skip all middlewares of current callstack and execute next callstack
                 callStack.index++;
-                runCallback();
+                runCallStack();
               } else {
                 // Execute next middleware
                 callbacks.index++;
@@ -345,7 +353,7 @@ export default class Router {
       }
     }
 
-    function runCallback(error = null) {
+    function runCallStack(error = null) {
       if (typeof callStack.stack[callStack.index] === "undefined") {
         if (error !== null) {
           if (error instanceof Error) {
@@ -375,11 +383,11 @@ export default class Router {
         return runMiddleware(callbacks, error);
       } else {
         callStack.index++;
-        return runCallback(error);
+        return runCallStack(error);
       }
     }
 
-    runCallback();
+    runCallStack();
   }
 
   handler() {
