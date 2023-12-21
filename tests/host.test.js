@@ -46,7 +46,7 @@ describe("Subdomain based routing test", () => {
   
   test("GET /", async () => {
     const app = new Router({
-      host: "localhost:3000",
+      host: "localhost",
     });
     app.get("/", function (req, res) {
       res.end("GET");
@@ -68,7 +68,7 @@ describe("Subdomain based routing test", () => {
 
   test("GET /", async () => {
     const app = new Router({
-      host: "localhost:3000",
+      host: "localhost",
     });
 
     app.get("/", function (req, res) {
@@ -92,7 +92,7 @@ describe("Subdomain based routing test", () => {
 
   test("GET /", async () => {
     const app = new Router({
-      host: "localhost:3000",
+      host: "localhost",
     });
 
     app.get("/", function (req, res) {
