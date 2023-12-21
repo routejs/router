@@ -43,6 +43,28 @@ describe("Subdomain based routing test", () => {
 
     await request(app.handler()).post("/").expect(404);
   });
+  
+  test("GET /", async () => {
+    const app = new Router({
+      host: "localhost:3000",
+    });
+    app.get("/", function (req, res) {
+      res.end("GET");
+    });
+
+    app.domain(":name.localhost", function (router) {
+      router.get("/", function (req, res) {
+        res.end("Ok");
+      });
+    });
+
+    await request(app.handler())
+      .get("/")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("GET");
+      });
+  });
 
   test("GET /", async () => {
     const app = new Router({
