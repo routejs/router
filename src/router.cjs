@@ -1,6 +1,4 @@
 const nodePath = require("node:path");
-const url = require("node:url");
-const LRUCache = require("@opensnip/lrujs");
 const Route = require("./route.cjs");
 
 module.exports = class Router {
@@ -10,16 +8,12 @@ module.exports = class Router {
     host: undefined,
   };
   #route = null;
-  #pathCache = null;
 
   constructor(options = {}) {
     if (options.caseSensitive === true) {
       this.#config.caseSensitive = true;
     }
     this.#config.host = options.host;
-    this.#pathCache = new LRUCache({
-      maxLength: 250,
-    });
   }
 
   checkout(path, ...callbacks) {
@@ -264,26 +258,17 @@ module.exports = class Router {
   }
 
   handle({ requestHost, requestMethod, requestUrl, request, response }) {
-    let that = this;
-    if (requestHost) {
-      let host = that.#pathCache.get(requestHost);
-      if (typeof host === "undefined") {
-        host = requestHost.replace(/\:.*$/g, "");
-        that.#pathCache.set(requestHost, host);
-      }
-      requestHost = host;
-    }
-    let requestPath = that.#pathCache.get(requestUrl);
-    if (typeof requestPath === "undefined") {
-      const parsedUrl = url.parse(requestUrl ? requestUrl : "");
-      requestPath = decodeURI(parsedUrl.pathname);
-      that.#pathCache.set(requestUrl, requestPath);
-    }
-
     const callStack = {
       stack: this.routes(),
       index: 0,
     };
+
+    let requestPath = requestUrl;
+    if (requestUrl.indexOf("?") >= 0) {
+      requestPath = requestUrl.slice(0, requestUrl.indexOf("?"));
+    }
+
+    runCallStack();
 
     function runMiddleware(callbacks, error = null) {
       try {
@@ -354,40 +339,43 @@ module.exports = class Router {
     }
 
     function runCallStack(error = null) {
-      if (typeof callStack.stack[callStack.index] === "undefined") {
-        if (error !== null) {
-          if (error instanceof Error) {
-            throw error;
-          } else {
-            throw new Error(error);
+      try {
+        if (typeof callStack.stack[callStack.index] === "undefined") {
+          if (error !== null) {
+            if (error instanceof Error) {
+              throw error;
+            } else {
+              throw new Error(error);
+            }
           }
+          // Nothing to execute
+          return;
         }
-        // Nothing to execute
-        return;
-      }
 
-      let match = callStack.stack[callStack.index].match({
-        host: requestHost,
-        method: requestMethod,
-        path: requestPath,
-      });
+        let match = callStack.stack[callStack.index].match({
+          host: requestHost,
+          method: requestMethod,
+          path: requestPath,
+        });
 
-      // Execute callbacks
-      if (match !== false) {
-        request.params = match.params;
-        request.subdomains = match.subdomains;
-        const callbacks = {
-          stack: match.callbacks,
-          index: 0,
-        };
-        return runMiddleware(callbacks, error);
-      } else {
+        // Execute callbacks
+        if (match !== false) {
+          request.params = match.params;
+          request.subdomains = match.subdomains;
+          const callbacks = {
+            stack: match.callbacks,
+            index: 0,
+          };
+          return runMiddleware(callbacks, error);
+        } else {
+          callStack.index++;
+          return runCallStack(error);
+        }
+      } catch (exception) {
         callStack.index++;
-        return runCallStack(error);
+        return runCallStack(exception);
       }
     }
-
-    runCallStack();
   }
 
   handler() {

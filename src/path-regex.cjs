@@ -141,9 +141,14 @@ module.exports = function pathRegex(path, options = { caseSensitive: false }) {
       param: path.slice(replaceStart, replaceEnd + 1),
       optional: path[replaceEnd + 1] === "?",
     };
-    if (paramDetails.optional === true && path[replaceStart - 1] === "/") {
+    if (
+      paramDetails.optional === true &&
+      path[replaceStart - 1] === "/" &&
+      (typeof path[replaceEnd + 2] === "undefined" ||
+        path[replaceEnd + 2] === "/")
+    ) {
       replaceParam = `/${paramDetails.param}`;
-      paramDetails.paramRegex = `(:?\\/${paramDetails.paramRegex})`;
+      paramDetails.paramRegex = `(?:\\/${paramDetails.paramRegex})`;
     } else {
       replaceParam = paramDetails.param;
     }
@@ -165,7 +170,7 @@ module.exports = function pathRegex(path, options = { caseSensitive: false }) {
     for (let e of allParams) {
       if (params.hasOwnProperty(e.name)) {
         let replaceStr = e.paramRegex;
-        if (e.optional === true) {
+        if (e.optional === true && replaceStr.slice(0, 6) === "(?:\\/(") {
           tmpPath = tmpPath.replace(replaceStr, `/${params[e.name]}`);
         } else {
           tmpPath = tmpPath.replace(replaceStr, params[e.name]);

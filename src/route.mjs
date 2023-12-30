@@ -136,8 +136,10 @@ export default class Route {
       }
       if (match.length > 1 && this.subdomains.length > 0) {
         for (let i = 1; i < match.length ?? 0; i++) {
-          if (this.subdomains.hasOwnProperty(i - 1)) {
-            route.subdomains[this.subdomains[i - 1]] = match[i];
+          if (this.subdomains.hasOwnProperty(i - 1) && match[i] !== undefined) {
+            route.subdomains[this.subdomains[i - 1]] = decodeURIComponent(
+              match[i]
+            );
           }
         }
       }
@@ -164,8 +166,8 @@ export default class Route {
 
     if (match.length > 1 && this.params.length > 0) {
       for (let i = 1; i < match.length ?? 0; i++) {
-        if (this.params.hasOwnProperty(i - 1)) {
-          route.params[this.params[i - 1]] = match[i];
+        if (this.params.hasOwnProperty(i - 1) && match[i] !== undefined) {
+          route.params[this.params[i - 1]] = decodeURIComponent(match[i]);
         }
       }
     }
@@ -183,7 +185,7 @@ export default class Route {
         compile: hostRegexp.compile,
       };
     } catch (err) {
-      throw new TypeError("" + host + " invalid regular expression");
+      throw new TypeError(host + " invalid regular expression");
     }
   }
 
@@ -198,7 +200,7 @@ export default class Route {
         compile: pathRegexp.compile,
       };
     } catch (err) {
-      throw new TypeError("" + path + " invalid regular expression");
+      throw new TypeError(path + " invalid regular expression");
     }
   }
 
@@ -216,7 +218,7 @@ export default class Route {
         compile: pathRegexp.compile,
       };
     } catch (err) {
-      throw new TypeError("" + path + " invalid regular expression");
+      throw new TypeError(path + " invalid regular expression");
     }
   }
 }

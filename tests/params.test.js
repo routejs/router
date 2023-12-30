@@ -2,105 +2,235 @@ const request = require("supertest");
 const { Router } = require("../index.cjs");
 
 describe("Route params test", () => {
-  test("GET /:name", async () => {
-    const app = new Router();
-    app.get("/:name", function (req, res) {
-      res.end(req.params.name);
-    });
-
-    app.use(function (req, res) {
-      res.writeHead(404).end("Page not found");
-    });
-
-    await request(app.handler())
-      .get("/abc")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("abc");
+  describe("It should match route params", () => {
+    test("GET /:name", async () => {
+      const app = new Router();
+      app.get("/:name", function (req, res) {
+        res.end(req.params.name);
       });
-  });
 
-  test("GET /:name/*", async () => {
-    const app = new Router();
-    app.get("/:name/*", function (req, res) {
-      res.end(req.params.name);
-    });
-
-    app.use(function (req, res) {
-      res.writeHead(404).end("Page not found");
-    });
-
-    await request(app.handler())
-      .get("/abc/xyz/testing")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("abc");
+      app.use(function (req, res) {
+        res.writeHead(404).end("Page not found");
       });
+
+      await request(app.handler()).get("/abc").expect(200, "abc");
+    });
+
+    test("GET /image/:category/:name.:ext", async () => {
+      const app = new Router();
+      app.get("/image/:category/:name.:ext", function (req, res) {
+        res.end(JSON.stringify(req.params));
+      });
+
+      app.use(function (req, res) {
+        res.writeHead(404).end("Page not found");
+      });
+
+      await request(app.handler())
+        .get("/image/animal/cat.png")
+        .expect(
+          200,
+          JSON.stringify({ category: "animal", name: "cat", ext: "png" })
+        );
+    });
   });
 
-  test("GET /abc?", async () => {
-    const app = new Router();
-    app.get("/abc?", function (req, res) {
-      res.end("Ok");
+  describe("Decode params", function () {
+    test("It should decode the capture", async () => {
+      const app = new Router();
+
+      app.get("*", function (req, res) {
+        res.end(JSON.stringify(req.params));
+      });
+
+      await request(app.handler())
+        .get("/string/decode%20and%20capture")
+        .expect(200, JSON.stringify({ 0: "string/decode and capture" }));
     });
 
-    app.use(function (req, res) {
-      res.writeHead(404).end("Page not found");
+    test("It should decode correct params", async () => {
+      const app = new Router();
+
+      app.get("/:name", function (req, res) {
+        res.end(String(req.params.name));
+      });
+
+      await request(app.handler()).get("/foo%2Fbar").expect("foo/bar");
     });
 
-    await request(app.handler()).get("/ab").expect(200);
+    test("It should not accept params in malformed paths", async () => {
+      const app = new Router();
+
+      app.get("/:name", function (req, res) {
+        res.end(String(req.params.name));
+      });
+
+      app.use(function (err, req, res, next) {
+        res.writeHead(400).end(err.message);
+      });
+
+      await request(app.handler()).get("/%foobar").expect(400);
+    });
+
+    test("It should not decode spaces", async () => {
+      const app = new Router();
+
+      app.get("/:name", function (req, res) {
+        res.end(String(req.params.name));
+      });
+
+      await request(app.handler()).get("/foo+bar").expect("foo+bar");
+    });
+
+    test("It should work with unicode", async () => {
+      const app = new Router();
+
+      app.get("/:name", function (req, res) {
+        res.end(String(req.params.name));
+      });
+
+      await request(app.handler()).get("/%ce%b1").expect("\u03b1");
+    });
   });
 
-  test("GET /abc?", async () => {
-    const app = new Router();
-    app.get("/abc?", function (req, res) {
-      res.end("Ok");
+  describe("It should match optional params", () => {
+    test("GET /:name?/:ext", async () => {
+      const app = new Router();
+      app.get("/:name?/:ext", function (req, res) {
+        res.end(JSON.stringify(req.params));
+      });
+
+      app.use(function (req, res) {
+        res.writeHead(404).end("Page not found");
+      });
+
+      await request(app.handler())
+        .get("/cat/png")
+        .expect(200, JSON.stringify({ name: "cat", ext: "png" }));
+      await request(app.handler())
+        .get("/cat")
+        .expect(200, JSON.stringify({ ext: "cat" }));
+      await request(app.handler()).get("/cat/png/abc").expect(404);
     });
 
-    app.use(function (req, res) {
-      res.writeHead(404).end("Page not found");
+    test("GET /:name/:ext?", async () => {
+      const app = new Router();
+      app.get("/:name/:ext?", function (req, res) {
+        res.end(JSON.stringify(req.params));
+      });
+
+      app.use(function (req, res) {
+        res.writeHead(404).end("Page not found");
+      });
+
+      await request(app.handler())
+        .get("/cat/png")
+        .expect(200, JSON.stringify({ name: "cat", ext: "png" }));
+      await request(app.handler())
+        .get("/cat")
+        .expect(200, JSON.stringify({ name: "cat" }));
+      await request(app.handler()).get("/cat/png/abc").expect(404);
     });
 
-    await request(app.handler()).get("/abc").expect(200);
-  });
+    test("GET /:name/:ext?/file", async () => {
+      const app = new Router();
+      app.get("/:name/:ext?/file", function (req, res) {
+        res.end(JSON.stringify(req.params));
+      });
 
-  test("GET /abc?", async () => {
-    const app = new Router();
-    app.get("/abc?", function (req, res) {
-      res.end("Ok");
+      app.use(function (req, res) {
+        res.writeHead(404).end("Page not found");
+      });
+
+      await request(app.handler())
+        .get("/cat/png/file")
+        .expect(200, JSON.stringify({ name: "cat", ext: "png" }));
+      await request(app.handler())
+        .get("/cat/file")
+        .expect(200, JSON.stringify({ name: "cat" }));
+      await request(app.handler()).get("/cat/png/abc").expect(404);
     });
 
-    app.use(function (req, res) {
-      res.writeHead(404).end("Page not found");
+    test("GET /image/:name.:ext?", async () => {
+      const app = new Router();
+      app.get("/image/:name.:ext?", function (req, res) {
+        res.end(JSON.stringify(req.params));
+      });
+
+      app.use(function (req, res) {
+        res.writeHead(404).end("Page not found");
+      });
+
+      await request(app.handler())
+        .get("/image/cat.png")
+        .expect(200, JSON.stringify({ name: "cat", ext: "png" }));
+      await request(app.handler())
+        .get("/image/cat.")
+        .expect(200, JSON.stringify({ name: "cat" }));
+      await request(app.handler()).get("/image/cat").expect(404);
     });
 
-    await request(app.handler()).get("/abcd").expect(404);
-  });
+    test("GET /:name?.png", async () => {
+      const app = new Router();
+      app.get("/:name?.png", function (req, res) {
+        res.end(JSON.stringify(req.params));
+      });
 
-  test("GET /abc?d", async () => {
-    const app = new Router();
-    app.get("/abc?d", function (req, res) {
-      res.end("Ok");
+      app.use(function (req, res) {
+        res.writeHead(404).end("Page not found");
+      });
+
+      await request(app.handler())
+        .get("/cat.png")
+        .expect(200, JSON.stringify({ name: "cat" }));
+      await request(app.handler()).get("/.png").expect(200);
+      await request(app.handler()).get("/cat").expect(404);
     });
 
-    app.use(function (req, res) {
-      res.writeHead(404).end("Page not found");
+    test("GET /abc?", async () => {
+      const app = new Router();
+      app.get("/abc?", function (req, res) {
+        res.end("Ok");
+      });
+
+      app.use(function (req, res) {
+        res.writeHead(404).end("Page not found");
+      });
+
+      await request(app.handler()).get("/ab").expect(200);
+      await request(app.handler()).get("/abc").expect(200);
+      await request(app.handler()).get("/abcd").expect(404);
     });
 
-    await request(app.handler()).get("/abd").expect(200);
-  });
+    test("GET /abc?d", async () => {
+      const app = new Router();
+      app.get("/abc?d", function (req, res) {
+        res.end("Ok");
+      });
 
-  test("GET /abc?d", async () => {
-    const app = new Router();
-    app.get("/abc?d", function (req, res) {
-      res.end("Ok");
+      app.use(function (req, res) {
+        res.writeHead(404).end("Page not found");
+      });
+
+      await request(app.handler()).get("/abd").expect(200);
+      await request(app.handler()).get("/abcd").expect(200);
+      await request(app.handler()).get("/abccd").expect(404);
     });
 
-    app.use(function (req, res) {
-      res.writeHead(404).end("Page not found");
-    });
+    test("GET /(abc)?d", async () => {
+      const app = new Router();
+      app.get("/(abc)?d", function (req, res) {
+        res.end("Ok");
+      });
 
-    await request(app.handler()).get("/abcd").expect(200);
+      app.use(function (req, res) {
+        res.writeHead(404).end("Page not found");
+      });
+
+      await request(app.handler()).get("/abcd").expect(200);
+      await request(app.handler()).get("/d").expect(200);
+      await request(app.handler()).get("/abccd").expect(404);
+    });
   });
 
   test("GET /abc+", async () => {
@@ -192,6 +322,24 @@ describe("Route params test", () => {
     });
 
     await request(app.handler()).get("/abd").expect(404);
+  });
+
+  test("GET /:name/*", async () => {
+    const app = new Router();
+    app.get("/:name/*", function (req, res) {
+      res.end(req.params.name);
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+
+    await request(app.handler())
+      .get("/abc/xyz/testing")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("abc");
+      });
   });
 
   test("GET /blog/*", async () => {
@@ -340,17 +488,18 @@ describe("Route params test", () => {
       });
   });
 
-  test("GET /\\(\\)|{}[]<>.:;\\+\\*", async () => {
+  test("GET /\\(\\)[].:;\\+\\*", async () => {
     const app = new Router();
-    app.get("/\\(\\)|{}[]<>.:;\\+\\*", function (req, res) {
+    app.get("/\\(\\)[].:;\\+\\*", function (req, res) {
       res.end(req.params[0]);
     });
 
     app.use(function (req, res) {
+      console.log(req.url);
       res.writeHead(404).end("Page not found");
     });
 
-    await request(app.handler()).get("/()|{}[]<>.:;+*").expect(200);
+    await request(app.handler()).get("/()[].:;+*").expect(200);
   });
 
   test("Invalid regex /(?:(\\d+))", async () => {

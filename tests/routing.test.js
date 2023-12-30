@@ -141,6 +141,72 @@ describe("Routing test", () => {
   test("Route name", async () => {
     const app = new Router();
     app
+      .get("/:name.:ext?", function (req, res) {
+        res.end(app.route("name", { name: "image" }));
+      })
+      .setName("name");
+    await request(app.handler())
+      .get("/image.")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("/image.");
+      });
+  });
+
+  test("Route name", async () => {
+    const app = new Router();
+    app
+      .get("/:name.:ext?", function (req, res) {
+        res.end(app.route("name", { name: "image", ext: "png" }));
+      })
+      .setName("name");
+    await request(app.handler()).get("/image.png").expect(200, "/image.png");
+  });
+
+  test("Route name", async () => {
+    const app = new Router();
+    app
+      .get("/:name/:ext?/file", function (req, res) {
+        res.end(app.route("name", { name: "image" }));
+      })
+      .setName("name");
+    await request(app.handler()).get("/image/file").expect(200, "/image/file");
+  });
+
+  test("Route name", async () => {
+    const app = new Router();
+    app
+      .get("/:name/:ext?/file", function (req, res) {
+        res.end(app.route("name", { name: "image", ext: "png" }));
+      })
+      .setName("name");
+    await request(app.handler())
+      .get("/image/png/file")
+      .expect(200, "/image/png/file");
+  });
+  test("Route name", async () => {
+    const app = new Router();
+    app
+      .get("/:name?/file", function (req, res) {
+        res.end(app.route("name"));
+      })
+      .setName("name");
+    await request(app.handler()).get("/file").expect(200, "/file");
+  });
+
+  test("Route name", async () => {
+    const app = new Router();
+    app
+      .get("/:name?/file", function (req, res) {
+        res.end(app.route("name", { name: "image" }));
+      })
+      .setName("name");
+    await request(app.handler()).get("/image/file").expect(200, "/image/file");
+  });
+
+  test("Route name", async () => {
+    const app = new Router();
+    app
       .get("/:name/user/:id(\\d+)/(\\d+)/*", function (req, res) {
         res.end(
           app.route("name", { name: "abc", id: 123, 0: 10, 1: "test/abc" })

@@ -12,26 +12,6 @@ describe("Subdomain based routing test", () => {
       router.get("/", function (req, res) {
         res.end("Ok");
       });
-    });
-
-    await request(app.handler())
-      .get("/")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("GET");
-      });
-  });
-
-  test("POST /", async () => {
-    const app = new Router();
-    app.get("/", function (req, res) {
-      res.end("GET");
-    });
-
-    app.domain(":name.localhost", function (router) {
-      router.get("/", function (req, res) {
-        res.end("Ok");
-      });
       router.post("/", function (req, res) {
         res.end("Ok");
       });
@@ -41,32 +21,9 @@ describe("Subdomain based routing test", () => {
       res.writeHead(404).end("Page not found");
     });
 
+    await request(app.handler()).get("/").expect(200, "GET");
     await request(app.handler()).post("/").expect(404);
   });
-  
-  test("GET /", async () => {
-    const app = new Router({
-      host: "localhost",
-    });
-
-    app.get("/", function (req, res) {
-      res.end("GET");
-    });
-
-    app.domain(":name.localhost", function (router) {
-      router.get("/", function (req, res) {
-        res.end("Ok");
-      });
-    });
-
-    await request(app.handler())
-      .get("/")
-      .set("Host", "localhost:3000")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("GET");
-      });
-  });
 
   test("GET /", async () => {
     const app = new Router({
@@ -81,35 +38,14 @@ describe("Subdomain based routing test", () => {
       router.get("/", function (req, res) {
         res.end("Ok");
       });
-    });
-
-    await request(app.handler())
-      .get("/")
-      .set("Host", "www.localhost:3000")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("Ok");
-      });
-  });
-
-  test("GET /", async () => {
-    const app = new Router({
-      host: "localhost",
-    });
-
-    app.get("/", function (req, res) {
-      res.end("GET");
-    });
-
-    app.domain(":name.localhost", function (router) {
-      router.get("/", function (req, res) {
-        res.end("Ok");
+      router.use(function (req, res) {
+        res.writeHead(404).end("Page not found");
       });
     });
 
     app.domain("*.localhost", function (router) {
       router.use(function (req, res) {
-        res.writeHead(404).end("Page not found");
+        res.writeHead(200).end(req.subdomains[0]);
       });
     });
 
@@ -119,7 +55,23 @@ describe("Subdomain based routing test", () => {
 
     await request(app.handler())
       .get("/")
+      .set("Host", "www.localhost:3000")
+      .expect(200, "Ok");
+    await request(app.handler())
+      .get("/not-found")
+      .set("Host", "www.localhost:3000")
+      .expect(404);
+    await request(app.handler())
+      .get("/")
       .set("Host", "www.blog.localhost:3000")
+      .expect(200, "www.blog");
+    await request(app.handler())
+      .get("/")
+      .set("Host", "localhost:3000")
+      .expect(200, "GET");
+    await request(app.handler())
+      .get("/not-found")
+      .set("Host", "localhost:3000")
       .expect(404);
   });
 
@@ -130,30 +82,82 @@ describe("Subdomain based routing test", () => {
         res.end(req.subdomains.name);
       });
     });
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
     await request(app.handler())
       .get("/subdomain/params")
       .set("Host", "www.localhost:3000")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("www");
+      .expect(200, "www");
+    await request(app.handler())
+      .get("/subdomain/params")
+      .set("Host", "www.en.localhost:3000")
+      .expect(404);
+  });
+
+  test("GET /subdomain/params", async () => {
+    const app = new Router();
+    app.domain(":name.:ext?.localhost", function (router) {
+      router.get("/subdomain/params", function (req, res) {
+        res.end(req.subdomains.name + "." + req.subdomains.ext);
       });
+    });
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+    await request(app.handler())
+      .get("/subdomain/params")
+      .set("Host", "www.en.localhost:3000")
+      .expect(200, "www.en");
+    await request(app.handler())
+      .get("/subdomain/params")
+      .set("Host", "www.localhost:3000")
+      .expect(200, "www.undefined");
+    await request(app.handler())
+      .get("/subdomain/params")
+      .set("Host", "www.en.demo.localhost:3000")
+      .expect(404);
+  });
+
+  test("GET /subdomain/params", async () => {
+    const app = new Router();
+    app.domain(":name?.:ext.localhost", function (router) {
+      router.get("/subdomain/params", function (req, res) {
+        res.end(req.subdomains.name + "." + req.subdomains.ext);
+      });
+    });
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
+    });
+    await request(app.handler())
+      .get("/subdomain/params")
+      .set("Host", "www.localhost:3000")
+      .expect(200, "undefined.www");
+    await request(app.handler())
+      .get("/subdomain/params")
+      .set("Host", "www.en.localhost:3000")
+      .expect(200, "www.en");
+    await request(app.handler())
+      .get("/subdomain/params")
+      .set("Host", "www.en.demo.localhost:3000")
+      .expect(404);
   });
 
   test("Param count :name.:ext.(\\d+).:id(\\d+)", async () => {
     const app = new Router();
     app.domain(":name.:ext.(\\d+).:id(\\d+).localhost", function (router) {
       router.get("/", function (req, res) {
-        res.end(`${Object.keys(req.subdomains).length}`);
+        res.end(String(Object.keys(req.subdomains).length));
       });
+    });
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page not found");
     });
 
     await request(app.handler())
       .get("/")
       .set("Host", "abc.png.0.1.localhost:3000")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("4");
-      });
+      .expect(200, "4");
   });
 
   test("Invalid regex (?:(\\d+))", async () => {

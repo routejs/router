@@ -125,7 +125,7 @@ module.exports = function hostRegex(host, options = { caseSensitive: false }) {
   if (pathRegex === "") {
     pathRegex = "";
   } else {
-    pathRegex = `^${pathRegex}$`;
+    pathRegex = `^${pathRegex}(?:\\:\\d+)?$`;
   }
   let allParams = [];
   let paramRegexCounter = 0;
@@ -144,12 +144,19 @@ module.exports = function hostRegex(host, options = { caseSensitive: false }) {
       optional: host[replaceEnd + 1] === "?",
     };
     if (paramDetails.optional === true) {
-      if (host[replaceStart - 1] === ".") {
+      if (
+        host[replaceStart - 1] === "." &&
+        (typeof host[replaceEnd + 2] === "undefined" ||
+          host[replaceEnd + 2] === ".")
+      ) {
         replaceParam = `\\.${paramDetails.param}`;
-        paramDetails.paramRegex = `(:?\\.${paramDetails.paramRegex})`;
-      } else if (host[replaceEnd + 2] === ".") {
+        paramDetails.paramRegex = `(?:\\.${paramDetails.paramRegex})`;
+      } else if (
+        typeof host[replaceStart - 1] === "undefined" &&
+        host[replaceEnd + 2] === "."
+      ) {
         replaceParam = `${paramDetails.param}?\\.`;
-        paramDetails.paramRegex = `(:?${paramDetails.paramRegex}\\.)?`;
+        paramDetails.paramRegex = `(?:${paramDetails.paramRegex}\\.)?`;
       } else {
         replaceParam = paramDetails.param;
       }
@@ -176,7 +183,13 @@ module.exports = function hostRegex(host, options = { caseSensitive: false }) {
       if (params.hasOwnProperty(e.name)) {
         let replaceStr = e.paramRegex;
         if (e.optional === true) {
-          tmpPath = tmpPath.replace(replaceStr, `.${params[e.name]}`);
+          if (replaceStr.slice(0, 6) === "(?:\\.(") {
+            tmpPath = tmpPath.replace(replaceStr, `.${params[e.name]}`);
+          } else if (replaceStr.slice(-5) === ")\\.)?") {
+            tmpPath = tmpPath.replace(replaceStr, `${params[e.name]}.`);
+          } else {
+            tmpPath = tmpPath.replace(replaceStr, params[e.name]);
+          }
         } else {
           tmpPath = tmpPath.replace(replaceStr, params[e.name]);
         }
@@ -213,7 +226,7 @@ module.exports = function hostRegex(host, options = { caseSensitive: false }) {
       }
       compiledPath += char;
     }
-    compiledPath = compiledPath.replace(/(^\^|\$$)/gm, "");
+    compiledPath = compiledPath.replace(/(^\^|\(\:\:d\)\$$|\$$)/gm, "");
     if (validate === true) {
       if (regex.test(compiledPath)) {
         return compiledPath;
