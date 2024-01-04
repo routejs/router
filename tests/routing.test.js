@@ -2,12 +2,29 @@ const request = require("supertest");
 const { Router } = require("../index.cjs");
 
 describe("Routing test", () => {
-  test("GET /", async () => {
+  test("routing should match routes", async () => {
     const app = new Router();
+    const blog = new Router();
+    const group = new Router();
+
+    blog.get("/", function (req, res) {
+      res.end("blog");
+    });
+
+    blog.get("/:slug", function (req, res) {
+      res.end(req.params.slug);
+    });
+
+    group.get("/", function (req, res) {
+      res.end("group");
+    });
+
     app
       .use(function (req, res, next) {
         next();
       })
+      .use("/blog", blog)
+      .use("/group", group)
       .get("/", function (req, res) {
         res.end("GET");
       })
@@ -17,12 +34,12 @@ describe("Routing test", () => {
       .use(function (req, res) {
         res.writeHead(404).end("Page not found");
       });
-    await request(app.handler())
-      .get("/")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("GET");
-      });
+
+    await request(app.handler()).get("/").expect(200, "GET");
+    await request(app.handler()).get("/blog").expect(200, "blog");
+    await request(app.handler()).get("/group").expect(200, "group");
+    await request(app.handler()).get("/blog/abc").expect(200, "abc");
+    await request(app.handler()).get("/group/abc").expect(404);
   });
 
   test("POST /", async () => {
@@ -34,12 +51,8 @@ describe("Routing test", () => {
       .post("/", function (req, res) {
         res.end("POST");
       });
-    await request(app.handler())
-      .post("/")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("POST");
-      });
+
+    await request(app.handler()).post("/").expect(200, "POST");
   });
 
   test("PUT /", async () => {
@@ -51,12 +64,8 @@ describe("Routing test", () => {
       .put("/", function (req, res) {
         res.end("PUT");
       });
-    await request(app.handler())
-      .put("/")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("PUT");
-      });
+
+    await request(app.handler()).put("/").expect(200, "PUT");
   });
 
   test("DELETE /", async () => {
@@ -68,12 +77,8 @@ describe("Routing test", () => {
       .delete("/", function (req, res) {
         res.end("DELETE");
       });
-    await request(app.handler())
-      .delete("/")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("DELETE");
-      });
+
+    await request(app.handler()).delete("/").expect(200, "DELETE");
   });
 
   test("Not found /", async () => {
@@ -100,12 +105,8 @@ describe("Routing test", () => {
       .get("/:name", function (req, res) {
         res.end(`${req.params.name}`);
       });
-    await request(app.handler())
-      .get("/abc")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("abc");
-      });
+
+    await request(app.handler()).get("/abc").expect(200, "abc");
   });
 
   test("Route name", async () => {
@@ -115,12 +116,8 @@ describe("Routing test", () => {
         res.end(app.route("name"));
       })
       .setName("name");
-    await request(app.handler())
-      .get("/test")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("/test");
-      });
+
+    await request(app.handler()).get("/test").expect(200, "/test");
   });
 
   test("Route name", async () => {
@@ -130,12 +127,8 @@ describe("Routing test", () => {
         res.end(app.route("name", { name: "abc" }));
       })
       .setName("name");
-    await request(app.handler())
-      .get("/test")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("/abc");
-      });
+
+    await request(app.handler()).get("/test").expect(200, "/abc");
   });
 
   test("Route name", async () => {
@@ -145,12 +138,8 @@ describe("Routing test", () => {
         res.end(app.route("name", { name: "image" }));
       })
       .setName("name");
-    await request(app.handler())
-      .get("/image.")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("/image.");
-      });
+
+    await request(app.handler()).get("/image.").expect(200, "/image.");
   });
 
   test("Route name", async () => {
@@ -184,6 +173,7 @@ describe("Routing test", () => {
       .get("/image/png/file")
       .expect(200, "/image/png/file");
   });
+
   test("Route name", async () => {
     const app = new Router();
     app
@@ -213,12 +203,10 @@ describe("Routing test", () => {
         );
       })
       .setName("name");
+
     await request(app.handler())
       .get("/abc/user/123/10/test/abc")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("/abc/user/123/10/test/abc");
-      });
+      .expect(200, "/abc/user/123/10/test/abc");
   });
 
   test("Route name throw error", async () => {
@@ -233,12 +221,11 @@ describe("Routing test", () => {
       });
     await request(app.handler())
       .get("/abc/user/123/10/test/abc")
-      .expect(500)
-      .then((res) => {
-        expect(res.text).toBe(
-          "invalid route parameters, please provide all route parameters"
-        );
-      });
+
+      .expect(
+        500,
+        "invalid route parameters, please provide all route parameters"
+      );
   });
 
   test("GET /any", async () => {
@@ -246,12 +233,8 @@ describe("Routing test", () => {
     app.any(["get", "post"], "/any", function (req, res) {
       res.end("any");
     });
-    await request(app.handler())
-      .get("/any")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("any");
-      });
+
+    await request(app.handler()).get("/any").expect(200, "any");
   });
 
   test("GET /all", async () => {
@@ -259,11 +242,7 @@ describe("Routing test", () => {
     app.all("/all", function (req, res) {
       res.end("all");
     });
-    await request(app.handler())
-      .post("/all")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("all");
-      });
+
+    await request(app.handler()).post("/all").expect(200, "all");
   });
 });

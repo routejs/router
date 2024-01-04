@@ -1,8 +1,8 @@
 const request = require("supertest");
 const { Router } = require("../index.cjs");
 
-describe("Route params test", () => {
-  describe("It should match route params", () => {
+describe("Route params test", function () {
+  describe("It should match route params", function () {
     test("GET /:name", async () => {
       const app = new Router();
       app.get("/:name", function (req, res) {
@@ -45,7 +45,7 @@ describe("Route params test", () => {
 
       await request(app.handler())
         .get("/string/decode%20and%20capture")
-        .expect(200, JSON.stringify({ 0: "string/decode and capture" }));
+        .expect(200, JSON.stringify({ 0: "/string/decode and capture" }));
     });
 
     test("It should decode correct params", async () => {
@@ -55,7 +55,7 @@ describe("Route params test", () => {
         res.end(String(req.params.name));
       });
 
-      await request(app.handler()).get("/foo%2Fbar").expect("foo/bar");
+      await request(app.handler()).get("/foo%2Fbar").expect(200, "foo/bar");
     });
 
     test("It should not accept params in malformed paths", async () => {
@@ -79,7 +79,7 @@ describe("Route params test", () => {
         res.end(String(req.params.name));
       });
 
-      await request(app.handler()).get("/foo+bar").expect("foo+bar");
+      await request(app.handler()).get("/foo+bar").expect(200, "foo+bar");
     });
 
     test("It should work with unicode", async () => {
@@ -89,11 +89,11 @@ describe("Route params test", () => {
         res.end(String(req.params.name));
       });
 
-      await request(app.handler()).get("/%ce%b1").expect("\u03b1");
+      await request(app.handler()).get("/%ce%b1").expect(200, "\u03b1");
     });
   });
 
-  describe("It should match optional params", () => {
+  describe("It should match optional params", function () {
     test("GET /:name?/:ext", async () => {
       const app = new Router();
       app.get("/:name?/:ext", function (req, res) {
@@ -334,12 +334,7 @@ describe("Route params test", () => {
       res.writeHead(404).end("Page not found");
     });
 
-    await request(app.handler())
-      .get("/abc/xyz/testing")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("abc");
-      });
+    await request(app.handler()).get("/abc/xyz/testing").expect(200, "abc");
   });
 
   test("GET /blog/*", async () => {
@@ -378,12 +373,7 @@ describe("Route params test", () => {
       res.writeHead(404).end("Page not found");
     });
 
-    await request(app.handler())
-      .get("/blog/12345")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("12345");
-      });
+    await request(app.handler()).get("/blog/12345").expect(200, "12345");
   });
 
   test("GET /blog/:id(\\d+)", async () => {
@@ -422,12 +412,7 @@ describe("Route params test", () => {
       res.writeHead(404).end("Page not found");
     });
 
-    await request(app.handler())
-      .get("/blog/12345")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("12345");
-      });
+    await request(app.handler()).get("/blog/12345").expect(200, "12345");
   });
 
   test("GET /blog/(\\d+)", async () => {
@@ -466,12 +451,7 @@ describe("Route params test", () => {
       res.writeHead(404).end("Page not found");
     });
 
-    await request(app.handler())
-      .get("/image/cat.png")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("cat.png");
-      });
+    await request(app.handler()).get("/image/cat.png").expect(200, "cat.png");
   });
 
   test("Param count /image/:name.:ext/(\\d+)/:id(\\d+)", async () => {
@@ -480,22 +460,16 @@ describe("Route params test", () => {
       res.end(`${Object.keys(req.params).length}`);
     });
 
-    await request(app.handler())
-      .get("/image/cat.png/0/1")
-      .expect(200)
-      .then((res) => {
-        expect(res.text).toBe("4");
-      });
+    await request(app.handler()).get("/image/cat.png/0/1").expect(200, "4");
   });
 
-  test("GET /\\(\\)[].:;\\+\\*", async () => {
+  test("GET /\\(\\)[].\\:;\\+\\*", async () => {
     const app = new Router();
-    app.get("/\\(\\)[].:;\\+\\*", function (req, res) {
+    app.get("/\\(\\)[].\\:;\\+\\*", function (req, res) {
       res.end(req.params[0]);
     });
 
     app.use(function (req, res) {
-      console.log(req.url);
       res.writeHead(404).end("Page not found");
     });
 
@@ -536,5 +510,207 @@ describe("Route params test", () => {
         res.end("Ok");
       });
     }).toThrow(TypeError);
+  });
+
+  test("should work with several", async () => {
+    const app = new Router();
+
+    app.get("/api/*.*", function (req, res) {
+      const resource = req.params[0],
+        format = req.params[1];
+      res.end(resource + " as " + format);
+    });
+
+    await request(app.handler())
+      .get("/api/users/foo.bar.json")
+      .expect(200, "users/foo.bar as json");
+  });
+
+  test("should work cross-segment", async () => {
+    const app = new Router();
+
+    app.get("/api*", function (req, res) {
+      res.end(req.params[0]);
+    });
+
+    await request(app.handler()).get("/api").expect(200, "");
+    await request(app.handler()).get("/api/hey").expect(200, "/hey");
+  });
+
+  test("should allow naming", async () => {
+    const app = new Router();
+
+    app.get("/api/:resource(.*)", function (req, res) {
+      const resource = req.params.resource;
+      res.end(resource);
+    });
+
+    await request(app.handler())
+      .get("/api/users/0.json")
+      .expect(200, "users/0.json");
+  });
+
+  test("should not be greedy immediately after param", async () => {
+    const app = new Router();
+
+    app.get("/user/:user*", function (req, res) {
+      res.end(req.params.user);
+    });
+
+    await request(app.handler()).get("/user/122").expect(200, "1");
+  });
+
+  test("should eat everything after /", async () => {
+    const app = new Router();
+
+    app.get("/user/:user*", function (req, res) {
+      res.end(req.params.user);
+    });
+
+    await request(app.handler()).get("/user/122/aaa").expect(200, "1");
+  });
+
+  test("should span multiple segments", async () => {
+    const app = new Router();
+
+    app.get("/file/*", function (req, res) {
+      res.end(req.params[0]);
+    });
+
+    await request(app.handler())
+      .get("/file/javascripts/jquery.js")
+      .expect(200, "javascripts/jquery.js");
+  });
+
+  test("should be optional", async () => {
+    const app = new Router();
+
+    app.get("/file/*", function (req, res) {
+      res.end(req.params[0]);
+    });
+
+    await request(app.handler()).get("/file/").expect(200, "");
+  });
+
+  test("should require a preceding /", async () => {
+    const app = new Router();
+
+    app.get("/file/*", function (req, res) {
+      res.end(req.params[0]);
+    });
+
+    app.use(function (req, res) {
+      res.writeHead(404).end("Page Not Found");
+    });
+
+    await request(app.handler()).get("/file").expect(404);
+  });
+
+  test("should keep correct parameter indexes", async () => {
+    const app = new Router();
+
+    app.get("/*/user/:id", function (req, res) {
+      res.end(JSON.stringify(req.params));
+    });
+
+    await request(app.handler())
+      .get("/1/user/2")
+      .expect(200, '{"0":"1","id":"2"}');
+  });
+
+  describe(":name", function () {
+    test("should denote a capture group", async () => {
+      const app = new Router();
+
+      app.get("/user/:user", function (req, res) {
+        res.end(req.params.user);
+      });
+
+      await request(app.handler()).get("/user/abc").expect(200, "abc");
+    });
+
+    test("should match a single segment only", async () => {
+      const app = new Router();
+
+      app.get("/user/:user", function (req, res) {
+        res.end(req.params.user);
+      });
+
+      app.use(function (req, res) {
+        res.writeHead(404).end("Page Not Found");
+      });
+
+      await request(app.handler()).get("/user/abc/edit").expect(404);
+    });
+
+    test("should allow several capture groups", async () => {
+      const app = new Router();
+
+      app.get("/user/:user/:op", function (req, res) {
+        res.end(req.params.op + "ing " + req.params.user);
+      });
+
+      await request(app.handler())
+        .get("/user/abc/edit")
+        .expect(200, "editing abc");
+    });
+
+    test("should work following a partial capture group", async () => {
+      const app = new Router();
+
+      app.get("/user(s)?/:user/:op", function (req, res) {
+        res.end(
+          req.params.op +
+            "ing " +
+            req.params.user +
+            (req.params[0] ? " (old)" : "")
+        );
+      });
+
+      await request(app.handler())
+        .get("/user/abc/edit")
+        .expect(200, "editing abc");
+
+      await request(app.handler())
+        .get("/users/abc/edit")
+        .expect(200, "editing abc (old)");
+    });
+
+    test("should work inside literal parenthesis", async () => {
+      const app = new Router();
+
+      app.get("/:user\\(:op\\)", function (req, res) {
+        res.end(req.params.op + "ing " + req.params.user);
+      });
+
+      await request(app.handler()).get("/abc(edit)").expect(200, "editing abc");
+    });
+  });
+
+  describe("case sensitivity", function () {
+    test("should be disabled by default", async () => {
+      const app = new Router();
+
+      app.get("/user", function (req, res) {
+        res.end("Ok");
+      });
+
+      await request(app.handler()).get("/USER").expect(200, "Ok");
+    });
+
+    test("should match identical casing", async () => {
+      const app = new Router({ caseSensitive: true });
+
+      app.get("/uSer", function (req, res) {
+        res.end("Ok");
+      });
+
+      app.use(function (req, res) {
+        res.writeHead(404).end("Page Not Found");
+      });
+
+      await request(app.handler()).get("/uSer").expect(200, "Ok");
+      await request(app.handler()).get("/user").expect(404);
+    });
   });
 });

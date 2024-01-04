@@ -379,29 +379,29 @@ module.exports = class Router {
   }
 
   handler() {
-    function requestHandler(request, response) {
-      var requestHost = request.headers ? request.headers.host : null;
-      var requestMethod = request.method;
-      var requestUrl = request.url;
+    const that = this;
+    return function requestHandler(request, response) {
+      let requestHost = request.headers ? request.headers.host : null;
+      let requestMethod = request.method;
+      let requestUrl = request.url;
 
-      if (!requestHost && "getHeader" in request) {
+      if (!requestHost && typeof request.getHeader === "function") {
         requestHost = request.getHeader("host");
       }
-      if (!requestMethod && "getMethod" in request) {
+      if (!requestMethod && typeof request.getMethod === "function") {
         requestMethod = request.getMethod();
       }
-      if (!requestUrl && "getUrl" in request) {
+      if (!requestUrl && typeof request.getUrl === "function") {
         requestUrl = request.getUrl();
       }
 
-      this.handle({
+      that.handle({
         requestHost,
         requestMethod,
         requestUrl,
         request,
         response,
       });
-    }
-    return requestHandler.bind(this);
+    };
   }
 };

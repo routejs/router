@@ -18,6 +18,7 @@ module.exports = class Route {
   #regexCache = null;
 
   constructor({ host, method, path, name, group, callbacks, caseSensitive }) {
+    this.caseSensitive = caseSensitive ?? false;
     if (host && !(typeof host === "string" || host instanceof String)) {
       throw new TypeError("route host accepts only string as an argument");
     }
@@ -58,7 +59,6 @@ module.exports = class Route {
       ? this.#compileMiddlewareRegExp(group)
       : this.#compileMiddlewareRegExp("/");
 
-    this.caseSensitive = caseSensitive ?? false;
     this.host = host;
     this.hostRegexp = hostRegexp?.regexp;
     this.method = method;

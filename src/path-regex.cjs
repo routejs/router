@@ -1,231 +1,292 @@
-module.exports = function pathRegex(path, options = { caseSensitive: false }) {
-  let pathRegex = "";
-  let params = [];
-  let param = {};
-  let isEscape = false;
-  let caseSensitive = options?.caseSensitive ?? false;
-  for (let i = 0; i < path.length; i++) {
-    let char = path[i];
-    // Match escape character
-    if (path[i] === "\\" && isEscape === false) {
-      isEscape = true;
-      if (param.hasParamName === true && param.hasParamRegex !== true) {
-        param.nameEnd = i - 1;
-        if (param.nameStart !== param.nameEnd) {
-          params.push(param);
-        }
-        param = {};
+module.exports = function pathRegex(str, options = { caseSensitive: false }) {
+  const caseSensitive = options?.caseSensitive ?? false;
+  const tokens = [];
+  let i = 0;
+  let key = 0;
+  while (i < str.length) {
+    let char = str[i];
+
+    if (char === "\\") {
+      tokens.push({ type: "ESCAPED_CHAR", value: str[i + 1] ?? "\\" });
+      i = i + 2;
+      continue;
+    }
+
+    if (char === "*" || char === "+" || char === "?") {
+      if (char === "*") {
+        tokens.push({
+          type: "MODIFIER",
+          value: str[i++],
+          name: key++,
+          regex: "(.*)",
+        });
+      } else {
+        tokens.push({ type: "MODIFIER", value: str[i++] });
       }
-      if (i == path.length - 1) {
-        char += `\\${char}`;
+      continue;
+    }
+
+    if (char === "/") {
+      tokens.push({ type: "DELIMITER", value: str[i++] });
+      continue;
+    }
+
+    if (char === ":") {
+      let name = "";
+      let j = i + 1;
+
+      while (j < str.length) {
+        const code = str.charCodeAt(j);
+        if (
+          // `0-9`
+          (code >= 48 && code <= 57) ||
+          // `A-Z`
+          (code >= 65 && code <= 90) ||
+          // `a-z`
+          (code >= 97 && code <= 122) ||
+          // `_`
+          code === 95
+        ) {
+          name += str[j++];
+          continue;
+        }
+        break;
       }
-    } else if (isEscape === true) {
-      // Ignore escaped character
-      isEscape = false;
-      if (param.hasParamRegex !== true && path[i] !== "\\") {
-        // Escape special characters
-        if (path[i].match(/[^\.\^\$\[\]\{\}\|\*\+\?\(\)]/g)) {
-          char = `\\${char}`;
-        }
+
+      if (!name) throw new TypeError(`Missing parameter name at ${i}`);
+
+      tokens.push({
+        type: "PARAM",
+        value: name,
+        name,
+        regex: "([^\\/]+?)",
+      });
+      i = j;
+      continue;
+    }
+
+    if (char === "(") {
+      let count = 1;
+      let pattern = "";
+      let j = i + 1;
+
+      if (str[j] === "?") {
+        throw new TypeError(`Pattern cannot start with "?" at ${j}`);
       }
-    } else {
-      // Match params
-      if (path[i] === ":") {
-        if (param.hasParamName === true) {
-          param.nameEnd = i - 1;
-          if (param.nameStart !== param.nameEnd) {
-            params.push(param);
-          }
-          param = {};
-        }
-        param.nameStart = i;
-        param.hasParamName = true;
-      } else if (param.hasParamRegex !== true && path[i].match(/^[\/]$/i)) {
-        if (param.hasParamName === true) {
-          param.nameEnd = i - 1;
-          param.hasParamRegex = param.hasParamRegex === true;
-          if (param.nameStart !== param.nameEnd) {
-            params.push(param);
-          }
-        }
-        param = {};
-      } else if (path[i].match(/^[^A-Za-z0-9_]+$/i)) {
-        if (path[i] === "(") {
-          if (path[i + 1] === "?") {
-            if (path[i + 2] == ":") {
-              throw new TypeError(
-                `non-capturing groups are not allowed at ${i}`
-              );
-            }
-            throw new TypeError(`pattern cannot start with "?" at ${i}`);
-          }
-          if (param.hasParamRegex === true) {
-            throw new TypeError(`capturing groups are not allowed at ${i}`);
-          }
-          if (param.hasParamName === true && param.nameStart !== i - 1) {
-            param.hasParamRegex = true;
-            param.regexStart = i;
-            param.nameEnd = i - 1;
-          } else {
-            param = {};
-            param.hasParamName = false;
-            param.hasParamRegex = true;
-            param.regexStart = i;
-          }
-        } else if (param.hasParamRegex === true && path[i] === ")") {
-          param.regexEnd = i;
-          if (param.regexStart !== param.regexEnd) {
-            params.push(param);
-          }
-          param = {};
-        } else if (param.hasParamRegex !== true && path[i] === "*") {
-          param = {};
-          param.hasParamName = false;
-          param.hasParamRegex = true;
-          param.regexStart = i;
-          param.regexEnd = i;
-          params.push(param);
-          param = {};
-        } else if (param.hasParamRegex !== true) {
-          // Escape special characters
-          char = char.replace(/[\.\^\$\[\]\{\}\|\)]+/g, "\\$&");
+
+      while (j < str.length) {
+        if (str[j] === "\\") {
+          pattern += str[j++] + str[j++];
+          continue;
         }
 
-        if (param.hasParamRegex !== true && param.hasParamName === true) {
-          param.nameEnd = i - 1;
-          param.hasParamRegex = false;
-          if (param.nameStart !== param.nameEnd) {
-            params.push(param);
+        if (str[j] === ")") {
+          count--;
+          if (count === 0) {
+            j++;
+            break;
           }
-          param = {};
+        } else if (str[j] === "(") {
+          count++;
+          if (str[j + 1] !== "?") {
+            throw new TypeError(`Capturing groups are not allowed at ${j}`);
+          }
         }
+
+        pattern += str[j++];
       }
+
+      if (count) throw new TypeError(`Unbalanced pattern at ${i}`);
+      if (!pattern) throw new TypeError(`Missing pattern at ${i}`);
+
+      if (tokens.length > 0 && tokens[tokens.length - 1].type === "PARAM") {
+        tokens[tokens.length - 1] = {
+          type: "PARAM_REGEX",
+          value: pattern,
+          name: tokens[tokens.length - 1].name,
+          regex: "(" + pattern + ")",
+        };
+      } else {
+        tokens.push({
+          type: "REGEX",
+          value: pattern,
+          name: key++,
+          regex: "(" + pattern + ")",
+        });
+      }
+      i = j;
+      continue;
     }
-    if (i == path.length - 1) {
+
+    let path = "";
+    let j = i;
+    while (j < str.length) {
       if (
-        param.hasParamRegex === true &&
-        typeof param.regexEnd === "undefined"
+        str[j] === "\\" ||
+        str[j] === "*" ||
+        str[j] === "+" ||
+        str[j] === "?" ||
+        str[j] === ":" ||
+        str[j] === "(" ||
+        str[j] === "/"
       ) {
-        throw new TypeError(`unterminated group at ${i}`);
+        break;
       }
-      if (param.hasParamName === true) {
-        param.nameEnd = i;
-        param.hasParamRegex = param.hasParamRegex === true;
-        if (param.nameStart !== param.nameEnd) {
-          params.push(param);
+      // Escape special characters
+      path += str[j++];
+      continue;
+    }
+    tokens.push({ type: "PATH", value: path });
+    i = j;
+  }
+
+  const params = [];
+  let pathRegex = "";
+  let tokenIndex = 0;
+  while (tokenIndex < tokens.length) {
+    if (tokens[tokenIndex].type === "DELIMITER") {
+      if (
+        tokens[tokenIndex + 1] &&
+        (tokens[tokenIndex + 1].type === "PARAM" ||
+          tokens[tokenIndex + 1].type === "PARAM_REGEX" ||
+          tokens[tokenIndex + 1].type === "REGEX")
+      ) {
+        if (
+          tokens[tokenIndex + 2] &&
+          tokens[tokenIndex + 2].type === "MODIFIER" &&
+          tokens[tokenIndex + 2].value === "?" &&
+          (typeof tokens[tokenIndex + 3] === "undefined" ||
+            tokens[tokenIndex + 3].type === "DELIMITER")
+        ) {
+          tokenIndex++;
+          continue;
         }
       }
-      param = {};
+      pathRegex += tokens[tokenIndex++].value;
+      continue;
     }
-    pathRegex += char;
+
+    if (
+      tokens[tokenIndex].type === "PARAM" ||
+      tokens[tokenIndex].type === "PARAM_REGEX" ||
+      tokens[tokenIndex].type === "REGEX"
+    ) {
+      let param = {
+        name: tokens[tokenIndex].name,
+        regex: tokens[tokenIndex].regex,
+        optional: tokens[tokenIndex + 1]
+          ? tokens[tokenIndex + 1].type === "MODIFIER" &&
+            tokens[tokenIndex + 1].value === "?"
+          : false,
+      };
+
+      if (
+        param.optional === true &&
+        tokens[tokenIndex - 1] &&
+        tokens[tokenIndex - 1].type === "DELIMITER" &&
+        (typeof tokens[tokenIndex + 2] === "undefined" ||
+          tokens[tokenIndex + 2].type === "DELIMITER")
+      ) {
+        param.regex = "(?:\\/" + param.regex + ")?";
+        tokenIndex = tokenIndex + 2;
+      } else {
+        param.regex = param.regex;
+        tokenIndex++;
+      }
+
+      params.push(param);
+      pathRegex += param.regex;
+      continue;
+    }
+
+    if (
+      tokens[tokenIndex].type === "MODIFIER" &&
+      tokens[tokenIndex].value === "*"
+    ) {
+      let param = {
+        name: tokens[tokenIndex].name,
+        regex: tokens[tokenIndex].regex,
+        optional: false,
+      };
+
+      params.push(param);
+      pathRegex += param.regex;
+      tokenIndex++;
+      continue;
+    }
+
+    if (tokens[tokenIndex].type === "ESCAPED_CHAR") {
+      pathRegex += "\\" + tokens[tokenIndex++].value;
+      continue;
+    }
+
+    if (tokens[tokenIndex].type === "PATH") {
+      pathRegex += tokens[tokenIndex++].value.replace(
+        /([.+*?=^!:${}()[\]|/\\])/g,
+        "\\$1"
+      );
+      continue;
+    }
+    pathRegex += tokens[tokenIndex++].value;
   }
-  pathRegex = pathRegex.replace(/(^\/|\/$)/gm, "");
+
+  pathRegex = pathRegex.replace(/\/$/gm, "");
   if (pathRegex === "") {
     pathRegex = "^/?$";
   } else {
-    pathRegex = `^/${pathRegex}/?$`;
-  }
-  let allParams = [];
-  let paramRegexCounter = 0;
-  for (let e of params) {
-    let regex = path.slice(e.regexStart, e.regexEnd + 1);
-    if (regex === "*") {
-      regex = "(.*)";
-    }
-    let replaceStart = e.nameStart ?? e.regexStart;
-    let replaceEnd = e.regexEnd ?? e.nameEnd;
-    let replaceParam = null;
-    let paramDetails = {
-      name: path.slice(e.nameStart + 1, e.nameEnd + 1),
-      paramRegex: regex === "" ? "([^\\/]+?)" : regex,
-      param: path.slice(replaceStart, replaceEnd + 1),
-      optional: path[replaceEnd + 1] === "?",
-    };
-    if (
-      paramDetails.optional === true &&
-      path[replaceStart - 1] === "/" &&
-      (typeof path[replaceEnd + 2] === "undefined" ||
-        path[replaceEnd + 2] === "/")
-    ) {
-      replaceParam = `/${paramDetails.param}`;
-      paramDetails.paramRegex = `(?:\\/${paramDetails.paramRegex})`;
-    } else {
-      replaceParam = paramDetails.param;
-    }
-    if (paramDetails.name === "") {
-      paramDetails.name = paramRegexCounter++;
-    }
-    if (replaceParam !== null) {
-      pathRegex = pathRegex.replace(replaceParam, paramDetails.paramRegex);
-    }
-    allParams.push(paramDetails);
+    pathRegex = `^${pathRegex}/?$`;
   }
   let regex =
-    caseSensitive === true ? new RegExp(pathRegex, "i") : new RegExp(pathRegex);
-
-  // Compile regex to path
-  function compile(params = {}, options = {}) {
-    let tmpPath = regex.source;
-    let validate = options?.validate ?? false;
-    for (let e of allParams) {
-      if (params.hasOwnProperty(e.name)) {
-        let replaceStr = e.paramRegex;
-        if (e.optional === true && replaceStr.slice(0, 6) === "(?:\\/(") {
-          tmpPath = tmpPath.replace(replaceStr, `/${params[e.name]}`);
-        } else {
-          tmpPath = tmpPath.replace(replaceStr, params[e.name]);
-        }
-      } else {
-        if (e.optional === true) {
-          let replaceStr = e.paramRegex;
-          tmpPath = tmpPath.replace(replaceStr, "");
-        } else {
-          throw new TypeError(
-            "invalid route parameters, please provide all route parameters"
-          );
-        }
-      }
-    }
-
-    let isEscape = false;
-    let compiledPath = "";
-    for (let i = 0; i < tmpPath.length; i++) {
-      let char = tmpPath[i];
-      // Match escape character
-      if (tmpPath[i] === "\\" && isEscape === false) {
-        isEscape = true;
-        continue;
-      } else if (isEscape === true) {
-        // Ignore escaped character
-        isEscape = false;
-      } else {
-        // Match params
-        if (tmpPath[i] === "+") {
-          char = "";
-        } else if (tmpPath[i] === "?") {
-          char = "";
-        }
-      }
-      compiledPath += char;
-    }
-    compiledPath = compiledPath.replace(/(^\^|\/\$$)/gm, "");
-    if (validate === true) {
-      if (regex.test(compiledPath)) {
-        return compiledPath;
-      } else {
-        throw new TypeError(
-          "invalid route parameters, please provide all route parameters"
-        );
-      }
-    } else {
-      return compiledPath;
-    }
-  }
+    caseSensitive === false
+      ? new RegExp(pathRegex, "i")
+      : new RegExp(pathRegex);
 
   return {
-    path: path,
-    params: allParams,
-    regex,
-    compile,
+    path: str,
+    params,
+    regex: regex,
+    compile(params = {}, options = { validate: false }) {
+      const validate = options?.validate ?? false;
+      let compiledPath = "";
+      let i = 0;
+      while (i < tokens.length) {
+        if (tokens[i].type === "DELIMITER") {
+          compiledPath += tokens[i++].value;
+          continue;
+        }
+        if (tokens[i].type === "PATH") {
+          compiledPath += tokens[i++].value;
+          continue;
+        }
+        if (
+          tokens[i].type === "PARAM" ||
+          tokens[i].type === "PARAM_REGEX" ||
+          tokens[i].type === "REGEX" ||
+          (tokens[i].type === "MODIFIER" && tokens[i].value === "*")
+        ) {
+          if (params.hasOwnProperty(tokens[i].name)) {
+            compiledPath += params[tokens[i++].name];
+            continue;
+          } else {
+            if (
+              tokens[i + 1] &&
+              tokens[i + 1].type === "MODIFIER" &&
+              tokens[i + 1].value === "?"
+            ) {
+              if (tokens[i + 2] && tokens[i + 2].type === "DELIMITER") {
+                i = i + 3;
+                continue;
+              }
+            } else {
+              throw new TypeError(
+                "invalid route parameters, please provide all route parameters"
+              );
+            }
+          }
+        }
+        i++;
+      }
+      return compiledPath;
+    },
   };
 };
